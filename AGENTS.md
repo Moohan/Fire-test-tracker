@@ -1,7 +1,7 @@
 # Agent Instructions for SFRS ETT
 
 ## General Principles
-- **Desloppify**: This repository uses Deslopify to ensure high code quality.
+- **Desloppify**: This repository uses Desloppify to ensure high code quality.
 - **Guardrail**: For every step in `DEVELOPMENT_PLAN.md`, you MUST run `npx desloppify scan` (if available) or perform a thorough self-review based on the "Deslopify Guardrails" section in the plan.
 - **Verification**: Do not mark a step as complete until all verification actions listed in that step have passed.
 
