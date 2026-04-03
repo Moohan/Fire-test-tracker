@@ -32,10 +32,10 @@ export default function Home() {
                   Logged in as
                 </p>
                 <p className="text-xl font-bold text-slate-900">
-                  {session.user?.name || (session.user as any)?.username}
+                  {session.user.username}
                 </p>
                 <p className="text-sm text-slate-600">
-                  Role: {(session.user as any)?.role}
+                  Role: {session.user.role}
                 </p>
               </div>
               <button
