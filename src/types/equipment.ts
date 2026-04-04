@@ -5,8 +5,8 @@ export type Status = "ON_RUN" | "OFF_RUN";
 export interface EquipmentRequirement {
   id: string;
   equipmentId: string;
-  frequency: string;
-  type: string;
+  frequency: Frequency;
+  type: TestType;
 }
 
 export interface Equipment {
@@ -16,6 +16,6 @@ export interface Equipment {
   location: string;
   category: string;
   procedurePath: string | null;
-  status: string;
+  status: Status;
   requirements?: EquipmentRequirement[];
 }
