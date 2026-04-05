@@ -5,6 +5,13 @@ import { createUser } from "../actions";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
+/**
+ * Render the "Add New User" page containing a form to create a new user.
+ *
+ * The form submits via an action handler that attempts to create the user; on success it navigates to `/admin/users`, and on failure it surfaces an error message above the form. The UI includes inputs for `username`, `password`, and `role`, and the submit button is disabled while the create action is pending.
+ *
+ * @returns The page element that renders the "Add New User" form.
+ */
 export default function NewUserPage() {
   const router = useRouter();
   const [error, action, isPending] = useActionState<string | null, FormData>(

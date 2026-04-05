@@ -22,6 +22,11 @@ const RequirementSchema = z.object({
   type: z.enum(["VISUAL", "FUNCTIONAL"]),
 });
 
+/**
+ * Ensures the current user session belongs to an administrator.
+ *
+ * @throws Error - "Unauthorized" if there is no active session or the user's role is not "ADMIN"
+ */
 async function ensureAdmin() {
   const session = await getServerSession(authOptions);
   if (!session || session.user.role !== "ADMIN") {
@@ -39,6 +44,20 @@ function getNormalizedProcedurePath(procedurePath: string): string {
   return normalized;
 }
 
+/**
+ * Create or update an equipment record, including optional procedure file handling and associated requirements.
+ *
+ * Expects `formData` to contain the equipment fields and optional procedure data:
+ * - `externalId`, `name`, `location`, `category`, `status`
+ * - `currentProcedurePath` (existing stored path, optional)
+ * - `procedureFile` (File, optional)
+ * - `req_WEEKLY`, `req_MONTHLY`, `req_QUARTERLY`, `req_ANNUAL` (each either `"NONE"` or a requirement type)
+ *
+ * Validates inputs, writes a new procedure file if provided (deleting the previous file if present), persists the equipment and its requirements to the database (create or update), and then revalidates and redirects to the admin equipment page.
+ *
+ * @param formData - FormData containing the equipment fields, optional procedure file and requirement selections
+ * @param id - Optional equipment id; when provided the function updates the existing record, otherwise it creates a new one
+ */
 export async function saveEquipment(formData: FormData, id?: string) {
   await ensureAdmin();
 

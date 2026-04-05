@@ -23,6 +23,12 @@ const PasswordResetSchema = z.object({
     .regex(/[a-z]/, "Password must contain at least one lowercase letter"),
 });
 
+/**
+ * Ensure the current server session belongs to an admin user.
+ *
+ * @returns The current session object for the authenticated admin user.
+ * @throws Error - "Unauthorized" if there is no session or the session user role is not "ADMIN".
+ */
 async function ensureAdmin() {
   const session = await getServerSession(authOptions);
   if (!session || session.user.role !== "ADMIN") {
@@ -31,6 +37,14 @@ async function ensureAdmin() {
   return session;
 }
 
+/**
+ * Create a new user from submitted form data.
+ *
+ * @param formData - Form data containing `username`, `password` and `role`. `username` must be at least 3 characters; `password` must be at least 6 characters and include at least one uppercase and one lowercase letter; `role` must be either `"ADMIN"` or `"USER"`.
+ * @throws Error("Unauthorized") - if there is no session or the current user is not an admin.
+ * @throws Error - with the first Zod validation message when input validation fails.
+ * @throws Error("Username already exists") - if a user with the same username already exists.
+ */
 export async function createUser(formData: FormData) {
   await ensureAdmin();
 
@@ -67,6 +81,13 @@ export async function createUser(formData: FormData) {
   revalidatePath("/admin/users");
 }
 
+/**
+ * Delete a user by their ID and revalidate the admin users page.
+ *
+ * @param id - The ID of the user to delete
+ * @throws Error("Unauthorized") if the caller is not an admin
+ * @throws Error("You cannot delete yourself") if `id` matches the current admin's user id
+ */
 export async function deleteUser(id: string) {
   const session = await ensureAdmin();
 
@@ -81,6 +102,14 @@ export async function deleteUser(id: string) {
   revalidatePath("/admin/users");
 }
 
+/**
+ * Reset an existing user's password using the supplied form data.
+ *
+ * @param userId - ID of the user whose password will be updated
+ * @param formData - FormData containing a `password` field that meets the password schema
+ * @throws Error("Unauthorized") if the caller is not an admin or there is no session
+ * @throws Error with the first validation issue message if the provided password is invalid
+ */
 export async function resetPassword(userId: string, formData: FormData) {
   await ensureAdmin();
 
