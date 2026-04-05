@@ -31,11 +31,6 @@ interface RawCSVRow {
   Annual_Test_Type?: string;
 }
 
-/**
- * Verifies the current server session belongs to a user with the ADMIN role.
- *
- * @throws Error - "Unauthorized" if there is no active session or the user's role is not "ADMIN".
- */
 async function ensureAdmin() {
   const session = await getServerSession(authOptions);
   if (!session || session.user.role !== "ADMIN") {
@@ -43,18 +38,6 @@ async function ensureAdmin() {
   }
 }
 
-/**
- * Process a CSV file uploaded in FormData and create or update equipment records with their test requirements.
- *
- * The CSV must include a header row with columns: `Equipment_ID`, `Name`, `Location`, `Category`,
- * and optional `Weekly_Test_Type`, `Monthly_Test_Type`, `Quarterly_Test_Type`, `Annual_Test_Type`.
- *
- * @param formData - FormData containing the CSV file under the "file" key
- * @returns An object with `success` (number of rows successfully created or updated) and `errors` (array of error messages for rows that failed validation or processing)
- * @throws Error("Unauthorized") when the current user is not an administrator
- * @throws Error("No file uploaded") when no file is provided or the file is empty
- * @throws Error(`CSV Parsing Error: <message>`) when PapaParse reports a parsing error
- */
 export async function bulkUploadEquipment(formData: FormData) {
   await ensureAdmin();
 

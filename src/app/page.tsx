@@ -3,13 +3,6 @@
 import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
 
-/**
- * Render the application's landing page with authentication-aware UI.
- *
- * Shows a centred loading screen while the session status is loading. When a session is present it displays the logged-in user's username and role, exposes administrative navigation when the user's role is `"ADMIN"`, and provides a sign-out control. When no session is present it shows a message and a sign-in link.
- *
- * @returns The React element for the landing page UI reflecting loading, authenticated, and unauthenticated states.
- */
 export default function Home() {
   const { data: session, status } = useSession();
 

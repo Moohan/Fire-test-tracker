@@ -5,16 +5,6 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import UserList from "./components/UserList";
 
-/**
- * Admin-only page that renders the user management interface.
- *
- * Fetches the current session and redirects to "/" if there is no session or
- * if the session user is not an ADMIN. Queries users (id, username, role),
- * orders them by username, and passes the results to the `UserList` component
- * along with the current user's id.
- *
- * @returns The JSX element for the admin user management page
- */
 export default async function UserManagementPage() {
   const session = await getServerSession(authOptions);
 

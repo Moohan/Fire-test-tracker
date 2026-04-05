@@ -8,14 +8,6 @@ interface EquipmentFormProps {
   initialData?: Equipment;
 }
 
-/**
- * Render a form for creating or editing equipment, with optional delete controls when initial data is provided.
- *
- * Renders fields for external ID, name, location, category, status, an optional procedure file upload/view link, and per-frequency test requirement selectors; includes submission and conditional deletion controls when `initialData` is present.
- *
- * @param initialData - Optional equipment object used to prefill form fields and enable the delete UI
- * @returns A JSX element for the equipment create/update form (and delete section when `initialData` is supplied)
- */
 export default function EquipmentForm({ initialData }: EquipmentFormProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, action, isPending] = useActionState<string | null, FormData>(

@@ -14,15 +14,6 @@ interface UserListProps {
   currentUserId: string;
 }
 
-/**
- * Renders a list of users with controls to reset passwords and delete users.
- *
- * The component shows each user's username and role, opens an in-page modal to set a new password, and initiates server-side actions for password resets and deletions.
- *
- * @param users - Array of users to display; each user must include `id`, `username` and `role`
- * @param currentUserId - The id of the currently authenticated user; used to prevent self-deletion
- * @returns The rendered user list and any conditional modal UI for password resets
- */
 export default function UserList({ users, currentUserId }: UserListProps) {
   const [resettingId, setResettingId] = useState<string | null>(null);
   const [newPassword, setNewPassword] = useState("");
