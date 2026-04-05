@@ -24,8 +24,12 @@ To ensure consistency and ease of agentic development, the following stack is ma
   - All Firefighter permissions.
   - Add/Edit/Remove equipment.
   - Bulk upload equipment via CSV.
-  - Manage users and reset passwords.
+  - Manage users (Add/List/Delete) and reset passwords.
   - View full audit history of all tests.
+- **Password Requirements**:
+  - Minimum 6 characters.
+  - At least one uppercase letter.
+  - At least one lowercase letter.
 
 ### 3.2 Equipment & Testing Logic
 - **Inventory Management**:
@@ -50,17 +54,21 @@ To ensure consistency and ease of agentic development, the following stack is ma
 ### 3.3 Dashboard & Logging
 - **Compliance View**:
   - Visual indicators: Green (Complete for period), Red (Outstanding/Overdue), Amber (Failed/OTR).
-  - Real-time updates via WebSockets or frequent polling to prevent duplicate testing by multiple users.
+  - Real-time updates via WebSockets or frequent polling (30s) to prevent duplicate testing by multiple users.
 - **Recording a Test**:
   - Select Equipment -> Select Test Type -> Result (Pass/Fail) -> Notes (Optional, e.g., "Replaced batteries") -> Timestamp & User ID (Automatic).
 - **Audit History**:
-  - Permanent, immutable log of every test result.
+  - Permanent, immutable log of every test result for standard users.
+  - Admins may edit or delete logs in exceptional circumstances.
   - Filterable by Equipment, Date Range, User, and Result.
 
 ### 3.4 Offline & PWA Support
 - **Service Worker**: Cache the UI and procedure documents for offline access.
 - **Sync Queue**: If a user logs a test while offline, the app must queue the request and automatically sync with the server once connectivity is restored.
-- **Conflict Handling**: If multiple logs for the same equipment arrive, all must be saved to the history.
+- **Conflict Handling**:
+  - If multiple logs for the same equipment window arrive:
+    - Same result: Highlight as duplicate/unnecessary test.
+    - Differing results (PASS/FAIL): Flag for both users to double-check and confirm their log is correct.
 
 ## 4. Data Architecture
 
