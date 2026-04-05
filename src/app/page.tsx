@@ -38,6 +38,14 @@ export default function Home() {
                   Role: {session.user.role}
                 </p>
               </div>
+              {session.user.role === "ADMIN" && (
+                <Link
+                  href="/admin/equipment"
+                  className="w-full flex justify-center py-2 px-4 border border-rose-600 rounded-md shadow-sm text-sm font-medium text-rose-600 bg-white hover:bg-rose-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-rose-500"
+                >
+                  Manage Equipment
+                </Link>
+              )}
               <button
                 onClick={() => signOut()}
                 className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-rose-600 hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-rose-500"
