@@ -7,7 +7,6 @@ import { revalidatePath } from "next/cache";
 import { writeFile, mkdir, unlink } from "fs/promises";
 import path from "path";
 import { redirect } from "next/navigation";
-import { Status } from "@/types/equipment";
 import { z } from "zod";
 
 const EquipmentSchema = z.object({

@@ -20,7 +20,16 @@ const CSVRowSchema = z.object({
   Annual_Test_Type: TestTypeSchema.default("NONE"),
 });
 
-type ValidatedCSVRow = z.infer<typeof CSVRowSchema>;
+interface RawCSVRow {
+  Equipment_ID?: string;
+  Name?: string;
+  Location?: string;
+  Category?: string;
+  Weekly_Test_Type?: string;
+  Monthly_Test_Type?: string;
+  Quarterly_Test_Type?: string;
+  Annual_Test_Type?: string;
+}
 
 async function ensureAdmin() {
   const session = await getServerSession(authOptions);
@@ -52,7 +61,7 @@ export async function bulkUploadEquipment(formData: FormData) {
     errors: [] as string[],
   };
 
-  for (const rawRow of parsed.data) {
+  for (const rawRow of parsed.data as RawCSVRow[]) {
     try {
       // Normalize row values to uppercase for the enum check
       const normalizedRow = Object.fromEntries(
@@ -68,7 +77,7 @@ export async function bulkUploadEquipment(formData: FormData) {
         const errorDetails = validatedFields.error.issues
           .map((e) => `${e.path.join(".")}: ${e.message}`)
           .join(", ");
-        results.errors.push(`Validation error for ID ${(rawRow as any).Equipment_ID || "unknown"}: ${errorDetails}`);
+        results.errors.push(`Validation error for ID ${rawRow.Equipment_ID || "unknown"}: ${errorDetails}`);
         continue;
       }
 
@@ -125,7 +134,7 @@ export async function bulkUploadEquipment(formData: FormData) {
       results.success++;
     } catch (e: unknown) {
       const errorMessage = e instanceof Error ? e.message : String(e);
-      results.errors.push(`Error processing ID ${(rawRow as any).Equipment_ID}: ${errorMessage}`);
+      results.errors.push(`Error processing ID ${rawRow.Equipment_ID || "unknown"}: ${errorMessage}`);
     }
   }
 
