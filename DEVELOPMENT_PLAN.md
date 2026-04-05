@@ -59,7 +59,7 @@ This document provides a step-by-step roadmap for an AI agent to build the SFRS 
 ### Step 6: User Management (Admin Only)
 - **Action**: Create UI to Manage Users (Add/List/Delete).
 - **Action**: Implement Password Reset functionality.
-- **Rules**: Enforce password requirements (Minimum 6 characters, including at least one uppercase and one lowercase letter).
+- **Rules**: Enforce password requirements (as defined in [Project Specification](./Project_spec.md#31-user-roles--access)).
 - **Verification**: Admin can create a new user and reset their password. Verify password requirements are enforced.
 
 ---
