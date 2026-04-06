@@ -11,20 +11,19 @@ export default function SyncManager() {
   const isSyncingRef = useRef(false);
 
   const sync = useCallback(async () => {
-    if (isSyncingRef.current || !navigator.onLine) return;
+    // Always update pending count first
+    const allPending = await db.pendingLogs.toArray();
+    // Only count those that haven't failed with a 400/404 yet for the badge
+    const activePending = allPending.filter(p => !p.syncError);
+    setPendingCount(activePending.length);
 
-    const pending = await db.pendingLogs.toArray();
-    if (pending.length === 0) {
-      setPendingCount(0);
-      return;
-    }
+    if (isSyncingRef.current || !navigator.onLine || activePending.length === 0) return;
 
     isSyncingRef.current = true;
     setIsSyncing(true);
-    setPendingCount(pending.length);
 
     try {
-      for (const log of pending) {
+      for (const log of activePending) {
         try {
           const res = await fetch("/api/tests/log", {
             method: "POST",
@@ -38,9 +37,15 @@ export default function SyncManager() {
             }),
           });
 
-          if (res.ok || res.status === 400 || res.status === 404) {
-            // If success or unfixable error (invalid data), remove from queue
+          if (res.ok) {
             await db.pendingLogs.delete(log.id!);
+          } else if (res.status === 400 || res.status === 404) {
+            // Mark as failed instead of deleting
+            const errorData = await res.json().catch(() => ({ error: "Unknown error" }));
+            await db.pendingLogs.update(log.id!, {
+              syncError: errorData.error || `HTTP ${res.status}`,
+              failedAt: new Date().toISOString()
+            });
           }
         } catch (err) {
           console.error("Failed to sync log:", err);
@@ -49,28 +54,36 @@ export default function SyncManager() {
         }
       }
     } finally {
-      const remaining = await db.pendingLogs.count();
-      setPendingCount(remaining);
+      const remainingLogs = await db.pendingLogs.toArray();
+      const remainingActive = remainingLogs.filter(p => !p.syncError);
+      setPendingCount(remainingActive.length);
       setIsSyncing(false);
       isSyncingRef.current = false;
 
-      if (pending.length > remaining) {
-        queryClient.invalidateQueries({ queryKey: ["equipment-dashboard"] });
-      }
+      // If we processed any successfully, invalidate dashboard
+      queryClient.invalidateQueries({ queryKey: ["equipment-dashboard"] });
     }
   }, [queryClient]);
 
   useEffect(() => {
-    // Initial sync
     sync();
 
     const handleOnline = () => sync();
+    const handleOffline = () => {
+      // Still query local DB to update UI badge when offline
+      db.pendingLogs.toArray().then(logs => {
+        setPendingCount(logs.filter(p => !p.syncError).length);
+      });
+    };
+
     window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
 
     const interval = setInterval(sync, 60000); // Check every minute
 
     return () => {
       window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
       clearInterval(interval);
     };
   }, [sync]);

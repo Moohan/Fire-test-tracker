@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { bulkUploadEquipment } from "./actions";
 
 export default function BulkUploadForm() {
   const [isPending, setIsPending] = useState(false);
   const [results, setResults] = useState<{ success: number; errors: string[] } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -22,6 +23,13 @@ export default function BulkUploadForm() {
       setError(err instanceof Error ? err.message : "An unexpected error occurred");
     } finally {
       setIsPending(false);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      fileInputRef.current?.click();
     }
   };
 
@@ -61,13 +69,23 @@ export default function BulkUploadForm() {
           <div className="flex items-center justify-center w-full">
             <label
               htmlFor="file"
-              className="flex flex-col items-center justify-center w-full h-44 border-2 border-slate-300 border-dashed rounded-lg cursor-pointer bg-slate-50 hover:bg-slate-100 transition-colors"
+              tabIndex={0}
+              onKeyDown={handleKeyDown}
+              className="flex flex-col items-center justify-center w-full h-44 border-2 border-slate-300 border-dashed rounded-lg cursor-pointer bg-slate-50 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-sfrs-red focus:border-transparent transition-colors"
             >
               <div className="flex flex-col items-center justify-center pt-5 pb-6">
                 <p className="mb-2 text-sm text-slate-500 font-medium">Click to upload or drag and drop</p>
                 <p className="text-xs text-slate-400">CSV files only</p>
               </div>
-              <input id="file" name="file" type="file" accept=".csv" className="hidden" required />
+              <input
+                id="file"
+                name="file"
+                type="file"
+                accept=".csv"
+                className="sr-only"
+                required
+                ref={fileInputRef}
+              />
             </label>
           </div>
         </div>

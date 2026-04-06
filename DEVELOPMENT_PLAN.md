@@ -15,13 +15,16 @@ This document provides a step-by-step roadmap for an AI agent to build the SFRS 
 ## 🏗 Phase 1: Foundation & Identity (Completed)
 
 ### Step 1: Project Scaffold & PWA Setup
+
 - **Action**: Initialize Next.js (App Router) with TypeScript, Tailwind CSS, and `@ducanh2912/next-pwa`.
 - **Config**: Define `en-GB` locale and DD/MM/YYYY formatting.
 
 ### Step 2: Base Components
+
 - **Action**: Create base Button and Card components with 44px+ touch targets.
 
 ### Step 3: Database & Auth Layer
+
 - **Action**: Initialize Prisma with SQLite and NextAuth.js (Credentials).
 
 ---
@@ -29,13 +32,16 @@ This document provides a step-by-step roadmap for an AI agent to build the SFRS 
 ## 🚜 Phase 2: Inventory & Administration (Completed)
 
 ### Step 4: Equipment Management (Admin Only)
-- **Action**: Create CRUD UI for Equipment including `sfrsId` and `mfrId` fields.
+
+- **Action**: Create CRUD UI for Equipment, including `sfrsId` and `mfrId` fields.
 - **Action**: Implement local file upload for EICs to `public/procedures/`.
 
 ### Step 5: Bulk Upload Engine
+
 - **Action**: Build CSV Parser using `papaparse` supporting all equipment fields.
 
 ### Step 6: User Management (Admin Only)
+
 - **Action**: Create UI to Manage Users and enforce password policies.
 
 ---
@@ -43,9 +49,11 @@ This document provides a step-by-step roadmap for an AI agent to build the SFRS 
 ## 🧠 Phase 3: Core Testing Logic (Completed)
 
 ### Step 7: Testing Window Calculations
+
 - **Action**: Create `testing-windows.ts` utility for recurring compliance periods.
 
 ### Step 8: Test Logging API & OTR Workflow
+
 - **Action**: Create API route `/api/tests/log` with OTR status logic.
 
 ---
@@ -53,10 +61,12 @@ This document provides a step-by-step roadmap for an AI agent to build the SFRS 
 ## 📱 Phase 4: User Experience & Offline (Completed)
 
 ### Step 9: Compliance Dashboard (Real-time)
+
 - **Action**: Build mobile-first dashboard with TanStack Query (30s polling).
 - **Logic**: Implement "Functional satisfies Visual" dashboard-side logic.
 
 ### Step 10: Offline Queue & Sync
+
 - **Action**: Implement `Dexie.js` for offline logging and a background `SyncManager`.
 
 ---
@@ -64,9 +74,11 @@ This document provides a step-by-step roadmap for an AI agent to build the SFRS 
 ## 🏁 Phase 5: Audit & History (Completed)
 
 ### Step 11: Audit Log & History
+
 - **Action**: Create filterable Audit History table with DD/MM/YYYY formatting.
 
 ### Step 12: Admin Corrections
+
 - **Action**: Allow Admins to delete logs from the Audit UI in exceptional circumstances.
 
 ---
@@ -74,14 +86,17 @@ This document provides a step-by-step roadmap for an AI agent to build the SFRS 
 ## 🎨 Phase 6: Branding & Final Polish (Completed)
 
 ### Step 13: SFRS Branding
+
 - **Action**: Apply official SFRS colors (#D1121F, #00843D, #FFB81C) via CSS variables.
 
 ### Step 14: Final Polish
+
 - **Action**: Final accessibility audit and performance optimization.
 
 ---
 
 ## 📋 Success Criteria Checklist
+
 - [x] Log a weekly functional test in < 30 seconds.
 - [x] OTR items are clearly visible (Amber/Red).
 - [x] OTR items require Acceptance Test to clear.

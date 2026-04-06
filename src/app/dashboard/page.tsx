@@ -11,6 +11,7 @@ interface ComplianceStatus {
   type: string;
   satisfied: boolean;
   hasFail: boolean;
+  windowId: string;
 }
 
 interface EquipmentItem {
@@ -52,7 +53,7 @@ export default function Dashboard() {
           <span className="text-sm font-medium hidden sm:inline">{session?.user?.username}</span>
           <button
             onClick={() => signOut()}
-            className="text-sm font-medium text-sfrs-red hover:text-sfrs-red"
+            className="text-sm font-medium text-sfrs-red hover:text-sfrs-red/80 hover:underline transition-all"
           >
             Sign Out
           </button>

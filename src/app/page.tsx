@@ -10,9 +10,9 @@ export default function Home() {
 
   useEffect(() => {
     if (status === "authenticated") {
-      router.push("/dashboard");
+      router.replace("/dashboard");
     } else if (status === "unauthenticated") {
-      router.push("/login");
+      router.replace("/login");
     }
   }, [status, router]);
 

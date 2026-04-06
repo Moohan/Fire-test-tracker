@@ -6,6 +6,7 @@ import { authOptions } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import Papa from "papaparse";
 import { z } from "zod";
+import { Prisma } from "@prisma/client";
 
 const TestTypeSchema = z.enum(["NONE", "VISUAL", "FUNCTIONAL"]);
 
@@ -141,8 +142,13 @@ export async function bulkUploadEquipment(formData: FormData) {
       }
       results.success++;
     } catch (e: unknown) {
-      const errorMessage = e instanceof Error ? e.message : String(e);
-      results.errors.push(`Error processing ID ${rawRow.Equipment_ID || "unknown"}: ${errorMessage}`);
+      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
+         const target = (e.meta?.target as string[]) || [];
+         results.errors.push(`Duplicate field violation for ID ${rawRow.Equipment_ID}: ${target.join(", ")} already exists`);
+      } else {
+        const errorMessage = e instanceof Error ? e.message : String(e);
+        results.errors.push(`Error processing ID ${rawRow.Equipment_ID || "unknown"}: ${errorMessage}`);
+      }
     }
   }
 

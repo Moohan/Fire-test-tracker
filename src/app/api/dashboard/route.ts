@@ -15,8 +15,8 @@ export async function GET() {
     include: {
       requirements: true,
       testLogs: {
+        where: { deletedAt: null },
         orderBy: { timestamp: "desc" },
-        take: 50, // Get recent logs to check compliance
       },
     },
   });
@@ -28,21 +28,27 @@ export async function GET() {
       const freq = req.frequency as Frequency;
       const window = getTestingWindow(freq, now);
 
-      // Find logs for this equipment in the current window
       const logsInWindow = item.testLogs.filter((log) => {
         const logDate = new Date(log.timestamp);
         return logDate >= window.start && logDate <= window.end;
       });
 
-      const hasPass = logsInWindow.some((log) => log.result === "PASS");
       const hasFail = logsInWindow.some((log) => log.result === "FAIL");
 
-      // Logic: Functional satisfies Visual
-      let satisfied = hasPass;
-      if (!satisfied && req.type === "VISUAL") {
-        satisfied = logsInWindow.some(log => log.result === "PASS" && (log.type === "VISUAL" || log.type === "FUNCTIONAL" || log.type === "ACCEPTANCE"));
-      } else if (!satisfied && req.type === "FUNCTIONAL") {
-        satisfied = logsInWindow.some(log => log.result === "PASS" && (log.type === "FUNCTIONAL" || log.type === "ACCEPTANCE"));
+      let satisfied = false;
+      if (req.type === "VISUAL") {
+        satisfied = logsInWindow.some(log =>
+          log.result === "PASS" &&
+          (log.type === "VISUAL" || log.type === "FUNCTIONAL" || log.type === "ACCEPTANCE")
+        );
+      } else if (req.type === "FUNCTIONAL") {
+        satisfied = logsInWindow.some(log =>
+          log.result === "PASS" &&
+          (log.type === "FUNCTIONAL" || log.type === "ACCEPTANCE")
+        );
+      } else {
+        // Default catch-all for potential future types or exact matching
+        satisfied = logsInWindow.some(log => log.result === "PASS" && log.type === req.type);
       }
 
       return {

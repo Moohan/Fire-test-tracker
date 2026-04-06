@@ -60,9 +60,11 @@ To ensure consistency and ease of agentic development, the following stack is ma
 - **Recording a Test**:
   - Select Equipment -> Select Test Type -> Result (Pass/Fail) -> Notes (Optional) -> Timestamp & User ID (Automatic).
 - **Audit History**:
-  - Permanent log of every test result.
-  - Admins may delete logs in exceptional circumstances via the Audit UI.
-  - Filterable by Equipment, User, and Result.
+  - **Deletion Model**: Irreversible deletion (with secondary audit log tracking the deletion event).
+  - **Retention & Authorization**: Only administrators can perform deletions in exceptional circumstances (e.g., data entry errors).
+  - **Visibility**: Once deleted, the record is removed from all compliance reporting and standard history views.
+  - **Audit Workflow**: Deletions are performed via the Audit UI and are immediately reflected in compliance calculations.
+  - **Filtering**: "Filterable by Equipment, User, and Result" applies only to active (non-deleted) records.
 
 ### 3.4 Offline & PWA Support
 - **Service Worker**: Cache the UI and procedure documents (EICs) for offline access.
@@ -75,6 +77,7 @@ To ensure consistency and ease of agentic development, the following stack is ma
 - `Equipment`: id, externalId, name, location, category, procedurePath, status (ON_RUN/OFF_RUN), sfrsId, mfrId.
 - `TestRequirement`: equipmentId, frequency (WEEKLY/MONTHLY/etc), type (VISUAL/FUNCTIONAL).
 - `TestLog`: id, equipmentId, userId, timestamp, type, result (PASS/FAIL), notes.
+- `AuditEvent`: id, actorId, action (e.g. "DELETE_LOG"), targetId, timestamp, metadata.
 
 ### 4.2 Bulk Upload Template
 The system accepts a CSV with the following headers:

@@ -13,25 +13,44 @@ export async function GET(req: Request) {
   const equipmentId = searchParams.get("equipmentId");
   const userId = searchParams.get("userId");
   const result = searchParams.get("result");
+  const page = parseInt(searchParams.get("page") || "1");
+  const limit = parseInt(searchParams.get("limit") || "20");
+  const skip = (page - 1) * limit;
 
-  const logs = await prisma.testLog.findMany({
-    where: {
-      equipmentId: equipmentId || undefined,
-      userId: userId || undefined,
-      result: result || undefined,
-    },
-    include: {
-      equipment: {
-        select: { externalId: true, name: true }
+  const where = {
+    deletedAt: null,
+    equipmentId: equipmentId || undefined,
+    userId: userId || undefined,
+    result: result || undefined,
+  };
+
+  const [logs, total] = await Promise.all([
+    prisma.testLog.findMany({
+      where,
+      include: {
+        equipment: {
+          select: { externalId: true, name: true }
+        },
+        user: {
+          select: { username: true }
+        }
       },
-      user: {
-        select: { username: true }
-      }
-    },
-    orderBy: { timestamp: "desc" },
-  });
+      orderBy: { timestamp: "desc" },
+      take: limit,
+      skip: skip,
+    }),
+    prisma.testLog.count({ where })
+  ]);
 
-  return NextResponse.json(logs);
+  return NextResponse.json({
+    logs,
+    pagination: {
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit)
+    }
+  });
 }
 
 export async function DELETE(req: Request) {
@@ -45,7 +64,20 @@ export async function DELETE(req: Request) {
   if (!id) return NextResponse.json({ error: "Missing ID" }, { status: 400 });
 
   try {
-    await prisma.testLog.delete({ where: { id } });
+    await prisma.$transaction([
+      prisma.testLog.update({
+        where: { id },
+        data: { deletedAt: new Date() }
+      }),
+      prisma.auditEvent.create({
+        data: {
+          actorId: session.user.id,
+          action: "DELETE_TEST_LOG",
+          targetId: id,
+          timestamp: new Date(),
+        }
+      })
+    ]);
     return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json({ error: "Failed to delete log" }, { status: 500 });

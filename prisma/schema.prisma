@@ -45,6 +45,16 @@ model TestLog {
   type        String
   result      String
   notes       String?
+  deletedAt   DateTime?
   user        User      @relation(fields: [userId], references: [id])
   equipment   Equipment @relation(fields: [equipmentId], references: [id])
+}
+
+model AuditEvent {
+  id        String   @id @default(cuid())
+  actorId   String
+  action    String
+  targetId  String
+  timestamp DateTime @default(now())
+  metadata  String?  // JSON string
 }

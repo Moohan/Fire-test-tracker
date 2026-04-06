@@ -52,7 +52,6 @@ export default function LogTestPage() {
 
     try {
       if (!navigator.onLine) {
-        // Save to Dexie if offline
         await db.pendingLogs.add(payload);
         router.push("/dashboard?queued=true");
         return;
@@ -71,8 +70,11 @@ export default function LogTestPage() {
 
       router.push("/dashboard");
     } catch (err) {
-      if (!navigator.onLine) {
-         // Fallback to offline queue if request fails and we're now offline
+      const isNetworkError =
+        err instanceof TypeError ||
+        (err instanceof Error && (err.message.includes("fetch") || err.message.includes("network")));
+
+      if (isNetworkError || !navigator.onLine) {
          await db.pendingLogs.add(payload);
          router.push("/dashboard?queued=true");
       } else {
@@ -88,8 +90,12 @@ export default function LogTestPage() {
   return (
     <div className="flex flex-col min-h-screen bg-slate-50">
       <header className="bg-white shadow-sm px-6 py-4 flex items-center sticky top-0 z-10">
-        <Link href="/dashboard" className="mr-4 text-slate-500 hover:text-slate-900 flex items-center justify-center w-11 h-11 rounded-full hover:bg-slate-100 transition-colors">
-          ←
+        <Link
+          href="/dashboard"
+          aria-label="Back to dashboard"
+          className="mr-4 text-slate-500 hover:text-slate-900 flex items-center justify-center w-11 h-11 rounded-full hover:bg-slate-100 transition-colors"
+        >
+          <span aria-hidden="true">←</span>
         </Link>
         <div>
           <h1 className="text-xl font-bold text-slate-900 leading-none">Record Test</h1>
@@ -144,7 +150,7 @@ export default function LogTestPage() {
                       : "bg-white border-slate-300 text-slate-700 hover:bg-slate-50"
                   }`}
                 >
-                  <span className="mr-2">✓</span> PASS
+                  <span className="mr-2" aria-hidden="true">✓</span> PASS
                 </button>
                 <button
                   type="button"
@@ -155,7 +161,7 @@ export default function LogTestPage() {
                       : "bg-white border-slate-300 text-slate-700 hover:bg-slate-50"
                   }`}
                 >
-                  <span className="mr-2">✗</span> FAIL
+                  <span className="mr-2" aria-hidden="true">✗</span> FAIL
                 </button>
               </div>
             </div>

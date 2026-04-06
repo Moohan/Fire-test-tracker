@@ -84,8 +84,14 @@ export default function UserList({ users, currentUserId }: UserListProps) {
                       type="password"
                       name="password"
                       required
+                      minLength={6}
+                      pattern="(?=.*[a-z])(?=.*[A-Z]).{6,}"
+                      title="Password must be at least 6 characters, contain at least one uppercase and one lowercase letter."
                       className="block w-full border border-slate-300 rounded-md shadow-sm p-2 focus:ring-sfrs-red focus:border-sfrs-red"
                     />
+                    <p className="mt-1 text-xs text-slate-500">
+                      Min 6 chars, 1 upper, 1 lower.
+                    </p>
                   </div>
                   <div className="flex space-x-2">
                     <button

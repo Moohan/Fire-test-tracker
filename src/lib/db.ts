@@ -1,3 +1,5 @@
+"use client";
+
 import Dexie, { Table } from 'dexie';
 
 export interface PendingTestLog {
@@ -7,6 +9,8 @@ export interface PendingTestLog {
   result: 'PASS' | 'FAIL';
   notes?: string;
   timestamp: string;
+  syncError?: string;
+  failedAt?: string;
 }
 
 export class ETTDatabase extends Dexie {
@@ -14,7 +18,7 @@ export class ETTDatabase extends Dexie {
 
   constructor() {
     super('ETTDatabase');
-    this.version(1).stores({
+    this.version(2).stores({
       pendingLogs: '++id, equipmentId, timestamp'
     });
   }

@@ -8,6 +8,7 @@ import { writeFile, mkdir, unlink } from "fs/promises";
 import path from "path";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { Prisma } from "@prisma/client";
 
 const EquipmentSchema = z.object({
   externalId: z.string().min(1, "External ID is required"),
@@ -141,14 +142,15 @@ export async function saveEquipment(formData: FormData, id?: string) {
       });
     }
   } catch (error: unknown) {
-    // Narrowing the error type using a type predicate for safety and clarity
-    if (
-      typeof error === "object" &&
-      error !== null &&
-      "code" in error &&
-      (error as { code?: string }).code === "P2002"
-    ) {
-      throw new Error("Equipment ID already exists.");
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      const target = (error.meta?.target as string[]) || [];
+      if (target.includes("externalId")) {
+        throw new Error("Equipment ID already exists.");
+      }
+      if (target.includes("sfrsId")) {
+        throw new Error("SFRS ID already exists.");
+      }
+      throw new Error("A unique constraint violation occurred.");
     }
     throw error;
   }
