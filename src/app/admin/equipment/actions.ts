@@ -8,6 +8,7 @@ import { writeFile, mkdir, unlink } from "fs/promises";
 import path from "path";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { Prisma } from "@prisma/client";
 
 const EquipmentSchema = z.object({
   externalId: z.string().min(1, "External ID is required"),
@@ -15,6 +16,8 @@ const EquipmentSchema = z.object({
   location: z.string().min(1, "Location is required"),
   category: z.string().min(1, "Category is required"),
   status: z.enum(["ON_RUN", "OFF_RUN"]),
+  sfrsId: z.string().optional().nullable(),
+  mfrId: z.string().optional().nullable(),
 });
 
 const RequirementSchema = z.object({
@@ -48,13 +51,15 @@ export async function saveEquipment(formData: FormData, id?: string) {
     location: formData.get("location"),
     category: formData.get("category"),
     status: formData.get("status"),
+    sfrsId: (formData.get("sfrsId") as string) || null,
+    mfrId: (formData.get("mfrId") as string) || null,
   });
 
   if (!validatedFields.success) {
     throw new Error(validatedFields.error.issues[0].message);
   }
 
-  const { externalId, name, location, category, status } = validatedFields.data;
+  const { externalId, name, location, category, status, sfrsId, mfrId } = validatedFields.data;
   const procedureFile = formData.get("procedureFile") as File;
 
   let procedurePath = (formData.get("currentProcedurePath") as string) || null;
@@ -111,6 +116,8 @@ export async function saveEquipment(formData: FormData, id?: string) {
             category,
             status,
             procedurePath,
+            sfrsId,
+            mfrId,
             requirements: {
               create: requirementsData,
             },
@@ -126,6 +133,8 @@ export async function saveEquipment(formData: FormData, id?: string) {
           category,
           status,
           procedurePath,
+          sfrsId,
+          mfrId,
           requirements: {
             create: requirementsData,
           },
@@ -133,14 +142,15 @@ export async function saveEquipment(formData: FormData, id?: string) {
       });
     }
   } catch (error: unknown) {
-    // Narrowing the error type using a type predicate for safety and clarity
-    if (
-      typeof error === "object" &&
-      error !== null &&
-      "code" in error &&
-      (error as { code?: string }).code === "P2002"
-    ) {
-      throw new Error("Equipment ID already exists.");
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      const target = (error.meta?.target as string[]) || [];
+      if (target.includes("externalId")) {
+        throw new Error("Equipment ID already exists.");
+      }
+      if (target.includes("sfrsId")) {
+        throw new Error("SFRS ID already exists.");
+      }
+      throw new Error("A unique constraint violation occurred.");
     }
     throw error;
   }

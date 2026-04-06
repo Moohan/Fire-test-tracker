@@ -17,5 +17,7 @@ export interface Equipment {
   category: string;
   procedurePath: string | null;
   status: Status;
+  sfrsId: string | null;
+  mfrId: string | null;
   requirements?: EquipmentRequirement[];
 }

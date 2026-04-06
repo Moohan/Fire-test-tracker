@@ -2,25 +2,28 @@
 
 The SFRS Equipment Testing Tracker is a Progressive Web App (PWA) designed for the Scottish Fire and Rescue Service (SFRS). It enables firefighters and Crew Commanders to manage, log, and monitor recurring equipment inspections (Weekly, Monthly, Quarterly, Annual) with a mobile-first, offline-capable interface.
 
-## Core Features
+## 🚀 Core Features
 
-- **Mobile-First PWA**: Optimized for use on tablets and phones on the station floor.
-- **Offline Capability**: Log tests even when Wi-Fi drops; sync automatically when back online.
-- **Compliance Dashboard**: At-a-glance status (Green/Red/Amber) for all equipment.
-- **Off the Run (OTR) Workflow**: Clear visibility and strict recovery path (Acceptance Test) for failed equipment.
-- **Bulk Management**: Admin tools for CSV bulk upload and equipment/user management.
-- **Audit Ready**: Immutable (for standard users) history of every test performed.
+- **Mobile-First PWA**: Optimized for use on tablets and phones on the station floor with 44px+ touch targets.
+- **Compliance Dashboard**: Real-time monitoring with Green/Red/Amber status indicators and 30s polling.
+- **Intelligent Satisfaction Logic**: Functional tests automatically satisfy Visual requirements for the same period.
+- **Offline Capability**: Robust offline logging using Dexie.js (IndexedDB); syncs automatically when back online.
+- **Off the Run (OTR) Workflow**: Strict recovery path for failed equipment; requires an Acceptance test to return to "On the Run".
+- **Audit Ready**: Immutable test history for standard users; Admin-only corrections/deletions.
+- **Bulk Management**: Admin tools for CSV bulk upload and full equipment/user administration.
 
-## Tech Stack
+## 🛠 Tech Stack
 
 - **Framework**: Next.js 16 (App Router)
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS
 - **Database**: SQLite (via Prisma ORM)
-- **Authentication**: NextAuth.js
+- **Auth**: NextAuth.js (Credentials Provider)
+- **State Management**: TanStack Query (React Query)
+- **Offline Storage**: Dexie.js (IndexedDB)
+- **Styling**: Tailwind CSS (Official SFRS Branding)
 - **PWA**: `@ducanh2912/next-pwa`
+- **Date Handling**: `date-fns` (ISO Weekly/Monthly/Quarterly windows)
 
-## Getting Started
+## 🏁 Getting Started
 
 ### Prerequisites
 
@@ -29,46 +32,45 @@ The SFRS Equipment Testing Tracker is a Progressive Web App (PWA) designed for t
 
 ### Installation
 
-1. Install dependencies:
+1. **Clone and Install**:
    ```bash
    npm install
    ```
 
-2. Set up environment variables:
-   Create a `.env` file in the root directory:
+2. **Environment Variables**:
+   Create a `.env` file:
    ```env
    DATABASE_URL="file:./prisma/dev.db"
    NEXTAUTH_SECRET="your-secret-here"
    NEXTAUTH_URL="http://localhost:3000"
    ```
 
-3. Initialize the database:
+3. **Initialize Database**:
    ```bash
    npx prisma migrate dev
-   ```
-
-4. Seed the admin user:
-   ```bash
    npx prisma db seed
    ```
-   *Default credentials: `admin` / `admin123`*
+   *Default Admin: `admin` / `admin123`*
 
-### Development
+### Development & Build
 
 Run the development server:
 ```bash
 npm run dev -- --webpack
 ```
-*Note: The `--webpack` flag is required due to compatibility issues between Turbopack and the PWA plugin.*
 
-### Testing
-
-Run E2E tests with Playwright:
+Build for production:
 ```bash
-npx playwright test
+npm run build -- --webpack
 ```
+*Note: The `--webpack` flag is required for PWA plugin compatibility with Next.js 16.*
 
-## Documentation
+## 🧪 Testing
+
+- **Unit Tests**: `npm test` (Vitest)
+- **E2E Tests**: `npx playwright test`
+
+## 📚 Documentation
 
 - [Project Specification](./Project_spec.md)
 - [Development Plan](./DEVELOPMENT_PLAN.md)

@@ -43,7 +43,7 @@ export default function EquipmentForm({ initialData }: EquipmentFormProps) {
     <div className="space-y-6">
       <form action={action} className="space-y-6">
         {error && (
-          <div className="p-4 bg-red-50 text-red-700 border border-red-200 rounded-md">
+          <div className="p-4 bg-sfrs-red/10 text-sfrs-red border border-sfrs-red/20 rounded-md">
             {error}
           </div>
         )}
@@ -79,6 +79,38 @@ export default function EquipmentForm({ initialData }: EquipmentFormProps) {
               id="name"
               required
               defaultValue={initialData?.name}
+              className="mt-1 block w-full border border-slate-300 rounded-md shadow-sm p-2"
+            />
+          </div>
+
+          <div>
+            <label
+              htmlFor="sfrsId"
+              className="block text-sm font-medium text-slate-700"
+            >
+              SFRS ID
+            </label>
+            <input
+              type="text"
+              name="sfrsId"
+              id="sfrsId"
+              defaultValue={initialData?.sfrsId || ""}
+              className="mt-1 block w-full border border-slate-300 rounded-md shadow-sm p-2"
+            />
+          </div>
+
+          <div>
+            <label
+              htmlFor="mfrId"
+              className="block text-sm font-medium text-slate-700"
+            >
+              Manufacturer ID
+            </label>
+            <input
+              type="text"
+              name="mfrId"
+              id="mfrId"
+              defaultValue={initialData?.mfrId || ""}
               className="mt-1 block w-full border border-slate-300 rounded-md shadow-sm p-2"
             />
           </div>
@@ -155,7 +187,7 @@ export default function EquipmentForm({ initialData }: EquipmentFormProps) {
                   href={initialData.procedurePath}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-rose-600 hover:underline"
+                  className="text-sfrs-red hover:underline"
                 >
                   View File
                 </a>
@@ -202,7 +234,7 @@ export default function EquipmentForm({ initialData }: EquipmentFormProps) {
           <button
             type="submit"
             disabled={isPending || isDeleting}
-            className="w-full inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-rose-600 hover:bg-rose-700 focus:outline-none disabled:opacity-50"
+            className="w-full inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-sfrs-red hover:bg-sfrs-red/90 focus:outline-none disabled:opacity-50"
           >
             {isPending
               ? "Saving..."
@@ -219,7 +251,7 @@ export default function EquipmentForm({ initialData }: EquipmentFormProps) {
             type="button"
             onClick={handleDelete}
             disabled={isPending || isDeleting}
-            className="w-full inline-flex justify-center py-2 px-4 border border-slate-300 shadow-sm text-sm font-medium rounded-md text-red-600 bg-white hover:bg-red-50 focus:outline-none disabled:opacity-50"
+            className="w-full inline-flex justify-center py-2 px-4 border border-slate-300 shadow-sm text-sm font-medium rounded-md text-sfrs-red bg-white hover:bg-sfrs-red/10 focus:outline-none disabled:opacity-50"
           >
             {isDeleting ? "Deleting..." : "Delete Equipment"}
           </button>

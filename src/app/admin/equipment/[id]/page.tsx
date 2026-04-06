@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect, notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import Link from "next/link";
 import EquipmentForm from "../components/EquipmentForm";
 import { Equipment } from "@/types/equipment";
 
@@ -33,8 +34,12 @@ export default async function EditEquipmentPage({
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold text-slate-900 mb-6">Edit Equipment</h1>
-      <div className="bg-white shadow p-6 rounded-lg">
+      <header className="mb-6">
+        <Link href="/admin/equipment" className="text-sm text-sfrs-red hover:underline mb-1 inline-block">← Back to Admin</Link>
+        <h1 className="text-3xl font-bold text-slate-900 leading-tight">Edit Equipment</h1>
+      </header>
+
+      <div className="bg-white shadow-sm border border-slate-200 rounded-lg p-6">
         <EquipmentForm initialData={castEquipment} />
       </div>
     </div>

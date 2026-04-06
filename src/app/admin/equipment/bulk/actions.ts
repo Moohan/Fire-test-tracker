@@ -6,6 +6,7 @@ import { authOptions } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import Papa from "papaparse";
 import { z } from "zod";
+import { Prisma } from "@prisma/client";
 
 const TestTypeSchema = z.enum(["NONE", "VISUAL", "FUNCTIONAL"]);
 
@@ -14,6 +15,8 @@ const CSVRowSchema = z.object({
   Name: z.string().min(1, "Name is required"),
   Location: z.string().min(1, "Location is required"),
   Category: z.string().min(1, "Category is required"),
+  SFRS_ID: z.string().optional().nullable(),
+  Manufacturer_ID: z.string().optional().nullable(),
   Weekly_Test_Type: TestTypeSchema.default("NONE"),
   Monthly_Test_Type: TestTypeSchema.default("NONE"),
   Quarterly_Test_Type: TestTypeSchema.default("NONE"),
@@ -25,6 +28,8 @@ interface RawCSVRow {
   Name?: string;
   Location?: string;
   Category?: string;
+  SFRS_ID?: string;
+  Manufacturer_ID?: string;
   Weekly_Test_Type?: string;
   Monthly_Test_Type?: string;
   Quarterly_Test_Type?: string;
@@ -112,6 +117,8 @@ export async function bulkUploadEquipment(formData: FormData) {
               name: row.Name,
               location: row.Location,
               category: row.Category,
+              sfrsId: row.SFRS_ID || null,
+              mfrId: row.Manufacturer_ID || null,
               requirements: {
                 create: requirements,
               },
@@ -125,6 +132,8 @@ export async function bulkUploadEquipment(formData: FormData) {
             name: row.Name,
             location: row.Location,
             category: row.Category,
+            sfrsId: row.SFRS_ID || null,
+            mfrId: row.Manufacturer_ID || null,
             requirements: {
               create: requirements,
             },
@@ -133,8 +142,13 @@ export async function bulkUploadEquipment(formData: FormData) {
       }
       results.success++;
     } catch (e: unknown) {
-      const errorMessage = e instanceof Error ? e.message : String(e);
-      results.errors.push(`Error processing ID ${rawRow.Equipment_ID || "unknown"}: ${errorMessage}`);
+      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
+         const target = (e.meta?.target as string[]) || [];
+         results.errors.push(`Duplicate field violation for ID ${rawRow.Equipment_ID}: ${target.join(", ")} already exists`);
+      } else {
+        const errorMessage = e instanceof Error ? e.message : String(e);
+        results.errors.push(`Error processing ID ${rawRow.Equipment_ID || "unknown"}: ${errorMessage}`);
+      }
     }
   }
 
