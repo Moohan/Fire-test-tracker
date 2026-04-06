@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { POST } from "./route";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
+import { Equipment, TestLog } from "@prisma/client";
 
 vi.mock("@/lib/prisma", () => ({
   prisma: {
@@ -12,7 +13,7 @@ vi.mock("@/lib/prisma", () => ({
     testLog: {
       create: vi.fn(),
     },
-    $transaction: vi.fn((cb) => cb(prisma)),
+    $transaction: vi.fn(),
   },
 }));
 
@@ -24,16 +25,24 @@ vi.mock("@/lib/auth", () => ({
   authOptions: {},
 }));
 
+type MockTx = {
+  testLog: { create: ReturnType<typeof vi.fn> };
+  equipment: { update: ReturnType<typeof vi.fn> };
+};
+
 describe("POST /api/tests/log", () => {
   const mockUser = { id: "user-1", username: "testuser", role: "USER" };
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (getServerSession as any).mockResolvedValue({ user: mockUser });
+    vi.mocked(getServerSession).mockResolvedValue({
+      user: mockUser,
+      expires: "2026-04-06T13:16:19.075Z",
+    });
   });
 
   it("should return 401 if not authenticated", async () => {
-    (getServerSession as any).mockResolvedValue(null);
+    vi.mocked(getServerSession).mockResolvedValue(null);
     const req = new Request("http://localhost/api/tests/log", {
       method: "POST",
       body: JSON.stringify({ equipmentId: "eq-1", type: "VISUAL", result: "PASS" }),
@@ -43,7 +52,7 @@ describe("POST /api/tests/log", () => {
   });
 
   it("should return 404 if equipment not found", async () => {
-    (prisma.equipment.findUnique as any).mockResolvedValue(null);
+    vi.mocked(prisma.equipment.findUnique).mockResolvedValue(null);
     const req = new Request("http://localhost/api/tests/log", {
       method: "POST",
       body: JSON.stringify({ equipmentId: "eq-1", type: "VISUAL", result: "PASS" }),
@@ -53,8 +62,35 @@ describe("POST /api/tests/log", () => {
   });
 
   it("should set status to OFF_RUN if result is FAIL", async () => {
-    (prisma.equipment.findUnique as any).mockResolvedValue({ id: "eq-1", status: "ON_RUN" });
-    (prisma.testLog.create as any).mockResolvedValue({ id: "log-1" });
+    const mockEquipment: Partial<Equipment> = {
+      id: "eq-1",
+      externalId: "EXT-1",
+      name: "Eq 1",
+      location: "Loc 1",
+      category: "Cat 1",
+      procedurePath: null,
+      status: "ON_RUN",
+    };
+    vi.mocked(prisma.equipment.findUnique).mockResolvedValue(mockEquipment as Equipment);
+
+    const mockLog: Partial<TestLog> = {
+      id: "log-1",
+      equipmentId: "eq-1",
+      userId: "user-1",
+      timestamp: new Date(),
+      type: "VISUAL",
+      result: "FAIL",
+      notes: null,
+    };
+
+    const mockTx: MockTx = {
+      testLog: { create: vi.fn().mockResolvedValue(mockLog as TestLog) },
+      equipment: { update: vi.fn().mockResolvedValue({} as Equipment) },
+    };
+
+    vi.mocked(prisma.$transaction).mockImplementation(async (cb) => {
+      return (cb as (tx: MockTx) => Promise<TestLog>)(mockTx);
+    });
 
     const req = new Request("http://localhost/api/tests/log", {
       method: "POST",
@@ -62,15 +98,42 @@ describe("POST /api/tests/log", () => {
     });
     await POST(req);
 
-    expect(prisma.equipment.update).toHaveBeenCalledWith({
+    expect(mockTx.equipment.update).toHaveBeenCalledWith({
       where: { id: "eq-1" },
       data: { status: "OFF_RUN" },
     });
   });
 
   it("should set status to ON_RUN if type is ACCEPTANCE and result is PASS", async () => {
-    (prisma.equipment.findUnique as any).mockResolvedValue({ id: "eq-1", status: "OFF_RUN" });
-    (prisma.testLog.create as any).mockResolvedValue({ id: "log-1" });
+    const mockEquipment: Partial<Equipment> = {
+      id: "eq-1",
+      externalId: "EXT-1",
+      name: "Eq 1",
+      location: "Loc 1",
+      category: "Cat 1",
+      procedurePath: null,
+      status: "OFF_RUN",
+    };
+    vi.mocked(prisma.equipment.findUnique).mockResolvedValue(mockEquipment as Equipment);
+
+    const mockLog: Partial<TestLog> = {
+      id: "log-1",
+      equipmentId: "eq-1",
+      userId: "user-1",
+      timestamp: new Date(),
+      type: "ACCEPTANCE",
+      result: "PASS",
+      notes: null,
+    };
+
+    const mockTx: MockTx = {
+      testLog: { create: vi.fn().mockResolvedValue(mockLog as TestLog) },
+      equipment: { update: vi.fn().mockResolvedValue({} as Equipment) },
+    };
+
+    vi.mocked(prisma.$transaction).mockImplementation(async (cb) => {
+      return (cb as (tx: MockTx) => Promise<TestLog>)(mockTx);
+    });
 
     const req = new Request("http://localhost/api/tests/log", {
       method: "POST",
@@ -78,15 +141,42 @@ describe("POST /api/tests/log", () => {
     });
     await POST(req);
 
-    expect(prisma.equipment.update).toHaveBeenCalledWith({
+    expect(mockTx.equipment.update).toHaveBeenCalledWith({
       where: { id: "eq-1" },
       data: { status: "ON_RUN" },
     });
   });
 
   it("should NOT clear OFF_RUN status if result is PASS but type is NOT ACCEPTANCE", async () => {
-    (prisma.equipment.findUnique as any).mockResolvedValue({ id: "eq-1", status: "OFF_RUN" });
-    (prisma.testLog.create as any).mockResolvedValue({ id: "log-1" });
+    const mockEquipment: Partial<Equipment> = {
+      id: "eq-1",
+      externalId: "EXT-1",
+      name: "Eq 1",
+      location: "Loc 1",
+      category: "Cat 1",
+      procedurePath: null,
+      status: "OFF_RUN",
+    };
+    vi.mocked(prisma.equipment.findUnique).mockResolvedValue(mockEquipment as Equipment);
+
+    const mockLog: Partial<TestLog> = {
+      id: "log-1",
+      equipmentId: "eq-1",
+      userId: "user-1",
+      timestamp: new Date(),
+      type: "FUNCTIONAL",
+      result: "PASS",
+      notes: null,
+    };
+
+    const mockTx: MockTx = {
+      testLog: { create: vi.fn().mockResolvedValue(mockLog as TestLog) },
+      equipment: { update: vi.fn().mockResolvedValue({} as Equipment) },
+    };
+
+    vi.mocked(prisma.$transaction).mockImplementation(async (cb) => {
+      return (cb as (tx: MockTx) => Promise<TestLog>)(mockTx);
+    });
 
     const req = new Request("http://localhost/api/tests/log", {
       method: "POST",
@@ -94,6 +184,6 @@ describe("POST /api/tests/log", () => {
     });
     await POST(req);
 
-    expect(prisma.equipment.update).not.toHaveBeenCalled();
+    expect(mockTx.equipment.update).not.toHaveBeenCalled();
   });
 });
