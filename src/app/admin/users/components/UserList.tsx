@@ -18,6 +18,7 @@ export default function UserList({ users, currentUserId }: UserListProps) {
   const [resettingId, setResettingId] = useState<string | null>(null);
   const [newPassword, setNewPassword] = useState("");
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
+  const [isResetting, setIsResetting] = useState(false);
 
   const handleDelete = async (id: string, username: string) => {
     if (id === currentUserId) {
@@ -41,6 +42,7 @@ export default function UserList({ users, currentUserId }: UserListProps) {
     e.preventDefault();
     if (!resettingId) return;
 
+    setIsResetting(true);
     const formData = new FormData();
     formData.append("password", newPassword);
 
@@ -51,6 +53,8 @@ export default function UserList({ users, currentUserId }: UserListProps) {
       setNewPassword("");
     } catch (e: unknown) {
       alert(e instanceof Error ? e.message : "Failed to reset password");
+    } finally {
+      setIsResetting(false);
     }
   };
 
@@ -104,6 +108,9 @@ export default function UserList({ users, currentUserId }: UserListProps) {
                   onChange={(e) => setNewPassword(e.target.value)}
                   className="mt-1 block w-full border border-slate-300 rounded-md shadow-sm p-2"
                 />
+                <p className="mt-1 text-xs text-slate-500">
+                  Min 6 chars, at least 1 uppercase and 1 lowercase letter.
+                </p>
               </div>
               <div className="flex justify-end space-x-3 pt-2">
                 <button
@@ -112,15 +119,17 @@ export default function UserList({ users, currentUserId }: UserListProps) {
                     setResettingId(null);
                     setNewPassword("");
                   }}
-                  className="px-4 py-2 text-sm font-medium text-slate-700 hover:text-slate-900"
+                  disabled={isResetting}
+                  className="px-4 py-2 text-sm font-medium text-slate-700 hover:text-slate-900 disabled:opacity-50"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 text-sm font-medium text-white bg-rose-600 hover:bg-rose-700 rounded-md"
+                  disabled={isResetting}
+                  className="px-4 py-2 text-sm font-medium text-white bg-rose-600 hover:bg-rose-700 rounded-md disabled:opacity-50"
                 >
-                  Reset Password
+                  {isResetting ? "Resetting..." : "Reset Password"}
                 </button>
               </div>
             </form>

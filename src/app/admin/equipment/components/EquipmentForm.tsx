@@ -154,6 +154,7 @@ export default function EquipmentForm({ initialData }: EquipmentFormProps) {
                 <a
                   href={initialData.procedurePath}
                   target="_blank"
+                  rel="noopener noreferrer"
                   className="text-rose-600 hover:underline"
                 >
                   View File
