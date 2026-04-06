@@ -9,7 +9,7 @@ const LogSchema = z.object({
   type: z.enum(["VISUAL", "FUNCTIONAL", "ACCEPTANCE"]),
   result: z.enum(["PASS", "FAIL"]),
   notes: z.string().optional(),
-  timestamp: z.string().datetime().optional(),
+  timestamp: z.string().datetime({ offset: true }).optional(),
 });
 
 export async function POST(req: Request) {
@@ -28,17 +28,17 @@ export async function POST(req: Request) {
 
     const { equipmentId, type, result, notes, timestamp } = validated.data;
 
-    // Verify equipment exists
-    const equipment = await prisma.equipment.findUnique({
-      where: { id: equipmentId },
-    });
-
-    if (!equipment) {
-      return NextResponse.json({ error: "Equipment not found" }, { status: 404 });
-    }
-
     const result_log = await prisma.$transaction(async (tx) => {
-      // 1. Create the log entry
+      // 1. Fetch equipment status inside the transaction to prevent race conditions
+      const equipment = await tx.equipment.findUnique({
+        where: { id: equipmentId },
+      });
+
+      if (!equipment) {
+        throw new Error("EQUIPMENT_NOT_FOUND");
+      }
+
+      // 2. Create the log entry
       const log = await tx.testLog.create({
         data: {
           equipmentId,
@@ -50,7 +50,7 @@ export async function POST(req: Request) {
         },
       });
 
-      // 2. Update the equipment status (OTR Workflow)
+      // 3. Update the equipment status (OTR Workflow)
       // "If any test is marked as Fail, the equipment status becomes "Off the Run"."
       // "It remains OTR until a successful Acceptance Test is logged."
 
@@ -73,7 +73,10 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json(result_log, { status: 201 });
-  } catch (error) {
+  } catch (error: unknown) {
+    if (error instanceof Error && error.message === "EQUIPMENT_NOT_FOUND") {
+      return NextResponse.json({ error: "Equipment not found" }, { status: 404 });
+    }
     console.error("Failed to log test:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }

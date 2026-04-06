@@ -27,7 +27,7 @@ vi.mock("@/lib/auth", () => ({
 
 type MockTx = {
   testLog: { create: ReturnType<typeof vi.fn> };
-  equipment: { update: ReturnType<typeof vi.fn> };
+  equipment: { findUnique: ReturnType<typeof vi.fn>; update: ReturnType<typeof vi.fn> };
 };
 
 describe("POST /api/tests/log", () => {
@@ -52,7 +52,14 @@ describe("POST /api/tests/log", () => {
   });
 
   it("should return 404 if equipment not found", async () => {
-    vi.mocked(prisma.equipment.findUnique).mockResolvedValue(null);
+    const mockTx: MockTx = {
+      testLog: { create: vi.fn() },
+      equipment: { findUnique: vi.fn().mockResolvedValue(null), update: vi.fn() },
+    };
+    vi.mocked(prisma.$transaction).mockImplementation(async (cb) => {
+      return (cb as unknown as (tx: MockTx) => Promise<TestLog>)(mockTx);
+    });
+
     const req = new Request("http://localhost/api/tests/log", {
       method: "POST",
       body: JSON.stringify({ equipmentId: "eq-1", type: "VISUAL", result: "PASS" }),
@@ -71,7 +78,6 @@ describe("POST /api/tests/log", () => {
       procedurePath: null,
       status: "ON_RUN",
     };
-    vi.mocked(prisma.equipment.findUnique).mockResolvedValue(mockEquipment as Equipment);
 
     const mockLog: Partial<TestLog> = {
       id: "log-1",
@@ -85,11 +91,11 @@ describe("POST /api/tests/log", () => {
 
     const mockTx: MockTx = {
       testLog: { create: vi.fn().mockResolvedValue(mockLog as TestLog) },
-      equipment: { update: vi.fn().mockResolvedValue({} as Equipment) },
+      equipment: { findUnique: vi.fn().mockResolvedValue(mockEquipment as Equipment), update: vi.fn().mockResolvedValue({} as Equipment) },
     };
 
     vi.mocked(prisma.$transaction).mockImplementation(async (cb) => {
-      return (cb as (tx: MockTx) => Promise<TestLog>)(mockTx);
+      return (cb as unknown as (tx: MockTx) => Promise<TestLog>)(mockTx);
     });
 
     const req = new Request("http://localhost/api/tests/log", {
@@ -114,7 +120,6 @@ describe("POST /api/tests/log", () => {
       procedurePath: null,
       status: "OFF_RUN",
     };
-    vi.mocked(prisma.equipment.findUnique).mockResolvedValue(mockEquipment as Equipment);
 
     const mockLog: Partial<TestLog> = {
       id: "log-1",
@@ -128,11 +133,11 @@ describe("POST /api/tests/log", () => {
 
     const mockTx: MockTx = {
       testLog: { create: vi.fn().mockResolvedValue(mockLog as TestLog) },
-      equipment: { update: vi.fn().mockResolvedValue({} as Equipment) },
+      equipment: { findUnique: vi.fn().mockResolvedValue(mockEquipment as Equipment), update: vi.fn().mockResolvedValue({} as Equipment) },
     };
 
     vi.mocked(prisma.$transaction).mockImplementation(async (cb) => {
-      return (cb as (tx: MockTx) => Promise<TestLog>)(mockTx);
+      return (cb as unknown as (tx: MockTx) => Promise<TestLog>)(mockTx);
     });
 
     const req = new Request("http://localhost/api/tests/log", {
@@ -157,7 +162,6 @@ describe("POST /api/tests/log", () => {
       procedurePath: null,
       status: "OFF_RUN",
     };
-    vi.mocked(prisma.equipment.findUnique).mockResolvedValue(mockEquipment as Equipment);
 
     const mockLog: Partial<TestLog> = {
       id: "log-1",
@@ -171,11 +175,11 @@ describe("POST /api/tests/log", () => {
 
     const mockTx: MockTx = {
       testLog: { create: vi.fn().mockResolvedValue(mockLog as TestLog) },
-      equipment: { update: vi.fn().mockResolvedValue({} as Equipment) },
+      equipment: { findUnique: vi.fn().mockResolvedValue(mockEquipment as Equipment), update: vi.fn().mockResolvedValue({} as Equipment) },
     };
 
     vi.mocked(prisma.$transaction).mockImplementation(async (cb) => {
-      return (cb as (tx: MockTx) => Promise<TestLog>)(mockTx);
+      return (cb as unknown as (tx: MockTx) => Promise<TestLog>)(mockTx);
     });
 
     const req = new Request("http://localhost/api/tests/log", {

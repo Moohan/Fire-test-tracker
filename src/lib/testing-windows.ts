@@ -17,6 +17,10 @@ export interface TestingWindow {
   id: string;
 }
 
+function assertNever(value: never): never {
+  throw new Error(`Invalid frequency: ${value}`);
+}
+
 export function getTestingWindow(frequency: Frequency, date: Date): TestingWindow {
   switch (frequency) {
     case "WEEKLY":
@@ -43,9 +47,8 @@ export function getTestingWindow(frequency: Frequency, date: Date): TestingWindo
         end: endOfYear(date),
         id: format(date, "yyyy"),
       };
-    default:
-      throw new Error(`Invalid frequency: ${frequency}`);
   }
+  return assertNever(frequency);
 }
 
 /**
