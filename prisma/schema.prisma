@@ -23,6 +23,8 @@ model Equipment {
   category      String
   procedurePath String?
   status        String            @default("ON_RUN")
+  sfrsId        String?           @unique
+  mfrId         String?
   testLogs      TestLog[]
   requirements  TestRequirement[]
 }

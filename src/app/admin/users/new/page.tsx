@@ -1,50 +1,30 @@
-"use client";
-
-import { useActionState } from "react";
-import { createUser } from "../actions";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { redirect } from "next/navigation";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { createUser } from "../actions";
 
-export default function NewUserPage() {
-  const router = useRouter();
-  const [error, action, isPending] = useActionState<string | null, FormData>(
-    async (prevState: string | null, formData: FormData) => {
-      try {
-        await createUser(formData);
-        router.push("/admin/users");
-        return null;
-      } catch (e: unknown) {
-        return e instanceof Error ? e.message : String(e);
-      }
-    },
-    null
-  );
+export default async function NewUserPage() {
+  const session = await getServerSession(authOptions);
+
+  if (!session || session.user.role !== "ADMIN") {
+    redirect("/");
+  }
 
   return (
     <div className="p-6 max-w-2xl mx-auto">
-      <div className="flex items-center mb-6">
-        <Link
-          href="/admin/users"
-          className="mr-4 text-rose-600 hover:text-rose-700"
-        >
-          ← Back
-        </Link>
-        <h1 className="text-2xl font-bold text-slate-900">Add New User</h1>
-      </div>
+      <header className="mb-6">
+        <Link href="/admin/users" className="text-sm text-sfrs-red hover:underline mb-1 inline-block">← Back to Users</Link>
+        <h1 className="text-3xl font-bold text-slate-900 leading-tight">Add New User</h1>
+      </header>
 
-      <div className="bg-white shadow p-6 rounded-lg">
-        <form action={action} className="space-y-6">
-          {error && (
-            <div className="p-4 bg-red-50 text-red-700 border border-red-200 rounded-md">
-              {error}
-            </div>
-          )}
-
-          <div className="space-y-4">
+      <div className="bg-white shadow-sm border border-slate-200 rounded-lg p-6">
+        <form action={createUser} className="space-y-6">
+          <div className="grid grid-cols-1 gap-6">
             <div>
               <label
                 htmlFor="username"
-                className="block text-sm font-medium text-slate-700"
+                className="block text-sm font-bold text-slate-700 uppercase tracking-wider mb-1"
               >
                 Username
               </label>
@@ -53,14 +33,15 @@ export default function NewUserPage() {
                 name="username"
                 id="username"
                 required
-                className="mt-1 block w-full border border-slate-300 rounded-md shadow-sm p-2"
+                className="mt-1 block w-full border border-slate-300 rounded-md shadow-sm p-3 focus:ring-sfrs-red focus:border-sfrs-red min-h-[44px]"
+                placeholder="e.g. firefighter_smith"
               />
             </div>
 
             <div>
               <label
                 htmlFor="password"
-                className="block text-sm font-medium text-slate-700"
+                className="block text-sm font-bold text-slate-700 uppercase tracking-wider mb-1"
               >
                 Password
               </label>
@@ -69,39 +50,40 @@ export default function NewUserPage() {
                 name="password"
                 id="password"
                 required
-                className="mt-1 block w-full border border-slate-300 rounded-md shadow-sm p-2"
+                className="mt-1 block w-full border border-slate-300 rounded-md shadow-sm p-3 focus:ring-sfrs-red focus:border-sfrs-red min-h-[44px]"
+                placeholder="••••••••"
               />
-              <p className="mt-1 text-xs text-slate-500">
-                Min 6 chars, at least 1 uppercase and 1 lowercase letter.
+              <p className="mt-2 text-xs text-slate-500">
+                Min 6 characters, at least one uppercase and one lowercase letter.
               </p>
             </div>
 
             <div>
               <label
                 htmlFor="role"
-                className="block text-sm font-medium text-slate-700"
+                className="block text-sm font-bold text-slate-700 uppercase tracking-wider mb-1"
               >
                 Role
               </label>
               <select
                 name="role"
                 id="role"
+                required
                 defaultValue="USER"
-                className="mt-1 block w-full border border-slate-300 rounded-md shadow-sm p-2"
+                className="mt-1 block w-full border border-slate-300 rounded-md shadow-sm p-3 focus:ring-sfrs-red focus:border-sfrs-red min-h-[44px]"
               >
-                <option value="USER">User (Firefighter)</option>
-                <option value="ADMIN">Admin (Crew Commander)</option>
+                <option value="USER">Firefighter (Standard User)</option>
+                <option value="ADMIN">Crew Commander (Admin)</option>
               </select>
             </div>
           </div>
 
-          <div className="pt-6">
+          <div className="pt-6 border-t border-slate-100">
             <button
               type="submit"
-              disabled={isPending}
-              className="w-full inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-rose-600 hover:bg-rose-700 focus:outline-none disabled:opacity-50"
+              className="w-full bg-sfrs-red text-white font-bold py-4 px-6 rounded-md shadow-lg hover:bg-sfrs-red/90 active:scale-[0.98] transition-all min-h-[44px]"
             >
-              {isPending ? "Creating..." : "Create User"}
+              Create User
             </button>
           </div>
         </form>

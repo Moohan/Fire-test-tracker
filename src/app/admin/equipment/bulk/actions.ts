@@ -14,6 +14,8 @@ const CSVRowSchema = z.object({
   Name: z.string().min(1, "Name is required"),
   Location: z.string().min(1, "Location is required"),
   Category: z.string().min(1, "Category is required"),
+  SFRS_ID: z.string().optional().nullable(),
+  Manufacturer_ID: z.string().optional().nullable(),
   Weekly_Test_Type: TestTypeSchema.default("NONE"),
   Monthly_Test_Type: TestTypeSchema.default("NONE"),
   Quarterly_Test_Type: TestTypeSchema.default("NONE"),
@@ -25,6 +27,8 @@ interface RawCSVRow {
   Name?: string;
   Location?: string;
   Category?: string;
+  SFRS_ID?: string;
+  Manufacturer_ID?: string;
   Weekly_Test_Type?: string;
   Monthly_Test_Type?: string;
   Quarterly_Test_Type?: string;
@@ -104,7 +108,7 @@ export async function bulkUploadEquipment(formData: FormData) {
       });
 
       if (equipment) {
-        await prisma.$transaction([
+        await prisma.([
           prisma.testRequirement.deleteMany({ where: { equipmentId: equipment.id } }),
           prisma.equipment.update({
             where: { id: equipment.id },
@@ -112,6 +116,8 @@ export async function bulkUploadEquipment(formData: FormData) {
               name: row.Name,
               location: row.Location,
               category: row.Category,
+              sfrsId: row.SFRS_ID || null,
+              mfrId: row.Manufacturer_ID || null,
               requirements: {
                 create: requirements,
               },
@@ -125,6 +131,8 @@ export async function bulkUploadEquipment(formData: FormData) {
             name: row.Name,
             location: row.Location,
             category: row.Category,
+            sfrsId: row.SFRS_ID || null,
+            mfrId: row.Manufacturer_ID || null,
             requirements: {
               create: requirements,
             },

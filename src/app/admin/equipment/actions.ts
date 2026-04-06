@@ -15,6 +15,8 @@ const EquipmentSchema = z.object({
   location: z.string().min(1, "Location is required"),
   category: z.string().min(1, "Category is required"),
   status: z.enum(["ON_RUN", "OFF_RUN"]),
+  sfrsId: z.string().optional().nullable(),
+  mfrId: z.string().optional().nullable(),
 });
 
 const RequirementSchema = z.object({
@@ -48,13 +50,15 @@ export async function saveEquipment(formData: FormData, id?: string) {
     location: formData.get("location"),
     category: formData.get("category"),
     status: formData.get("status"),
+    sfrsId: (formData.get("sfrsId") as string) || null,
+    mfrId: (formData.get("mfrId") as string) || null,
   });
 
   if (!validatedFields.success) {
     throw new Error(validatedFields.error.issues[0].message);
   }
 
-  const { externalId, name, location, category, status } = validatedFields.data;
+  const { externalId, name, location, category, status, sfrsId, mfrId } = validatedFields.data;
   const procedureFile = formData.get("procedureFile") as File;
 
   let procedurePath = (formData.get("currentProcedurePath") as string) || null;
@@ -100,7 +104,7 @@ export async function saveEquipment(formData: FormData, id?: string) {
 
   try {
     if (id) {
-      await prisma.$transaction([
+      await prisma.([
         prisma.testRequirement.deleteMany({ where: { equipmentId: id } }),
         prisma.equipment.update({
           where: { id },
@@ -111,6 +115,8 @@ export async function saveEquipment(formData: FormData, id?: string) {
             category,
             status,
             procedurePath,
+            sfrsId,
+            mfrId,
             requirements: {
               create: requirementsData,
             },
@@ -126,6 +132,8 @@ export async function saveEquipment(formData: FormData, id?: string) {
           category,
           status,
           procedurePath,
+          sfrsId,
+          mfrId,
           requirements: {
             create: requirementsData,
           },

@@ -1,108 +1,65 @@
-"use client";
-
-import { useActionState } from "react";
-import { bulkUploadEquipment } from "./actions";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { redirect } from "next/navigation";
 import Link from "next/link";
+import { bulkUploadEquipment } from "./actions";
 
-interface BulkUploadResult {
-  success: number;
-  errors: string[];
-}
+export default async function BulkUploadPage() {
+  const session = await getServerSession(authOptions);
 
-export default function BulkUploadPage() {
-  const [results, action, isPending] = useActionState<BulkUploadResult | null, FormData>(
-    async (prevState: BulkUploadResult | null, formData: FormData) => {
-      try {
-        const res = await bulkUploadEquipment(formData);
-        return res;
-      } catch (e: unknown) {
-        const errorMessage = e instanceof Error ? e.message : String(e);
-        return { success: 0, errors: [errorMessage] };
-      }
-    },
-    null
-  );
+  if (!session || session.user.role !== "ADMIN") {
+    redirect("/");
+  }
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
-      <div className="flex items-center mb-6">
-        <Link
-          href="/admin/equipment"
-          className="mr-4 text-rose-600 hover:text-rose-700"
-        >
-          ← Back
-        </Link>
-        <h1 className="text-2xl font-bold text-slate-900">
-          Bulk Upload Equipment
-        </h1>
-      </div>
+    <div className="p-6 max-w-2xl mx-auto">
+      <header className="mb-6">
+        <Link href="/admin/equipment" className="text-sm text-sfrs-red hover:underline mb-1 inline-block">← Back to Admin</Link>
+        <h1 className="text-3xl font-bold text-slate-900 leading-tight">Bulk Upload Equipment</h1>
+      </header>
 
-      <div className="bg-white shadow p-6 rounded-lg space-y-6">
-        <div className="bg-slate-50 p-4 border border-slate-200 rounded-md">
-          <h3 className="font-semibold text-slate-900 mb-2">
-            CSV Format Instructions
-          </h3>
-          <p className="text-sm text-slate-600">
-            The CSV must have the following headers:
-          </p>
-          <code className="block mt-2 p-2 bg-slate-100 rounded text-xs text-slate-800">
-            Equipment_ID, Name, Location, Category, Weekly_Test_Type,
-            Monthly_Test_Type, Quarterly_Test_Type, Annual_Test_Type
-          </code>
-          <p className="text-sm text-slate-600 mt-2">
-            Values for Test_Type: <span className="font-mono">None</span>,{" "}
-            <span className="font-mono">Visual</span>,{" "}
-            <span className="font-mono">Functional</span>.
-          </p>
+      <div className="bg-white shadow-sm border border-slate-200 rounded-lg p-6 space-y-6">
+        <div className="p-4 bg-slate-50 rounded-md border border-slate-200 text-sm text-slate-700 leading-relaxed">
+          <p className="font-bold mb-2 uppercase tracking-wider">CSV Format Guide:</p>
+          <ul className="list-disc ml-5 space-y-1">
+            <li><span className="font-bold">Required Columns:</span> Equipment_ID, Name, Location, Category</li>
+            <li><span className="font-bold">Optional Columns:</span> SFRS_ID, Manufacturer_ID</li>
+            <li><span className="font-bold">Test Frequency Columns:</span> Weekly_Test_Type, Monthly_Test_Type, Quarterly_Test_Type, Annual_Test_Type</li>
+            <li><span className="font-bold">Test Type Values:</span> None, Visual, Functional</li>
+          </ul>
         </div>
 
-        <form action={action} className="space-y-4">
+        <form action={bulkUploadEquipment} className="space-y-6">
           <div>
             <label
               htmlFor="file"
-              className="block text-sm font-medium text-slate-700"
+              className="block text-sm font-bold text-slate-700 uppercase tracking-wider mb-2"
             >
-              Select CSV File
+              Choose CSV File
             </label>
-            <input
-              type="file"
-              name="file"
-              id="file"
-              required
-              accept=".csv"
-              className="mt-1 block w-full border border-slate-300 rounded-md shadow-sm p-2"
-            />
+            <div className="flex items-center justify-center w-full">
+              <label
+                htmlFor="file"
+                className="flex flex-col items-center justify-center w-full h-44 border-2 border-slate-300 border-dashed rounded-lg cursor-pointer bg-slate-50 hover:bg-slate-100 transition-colors"
+              >
+                <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                  <p className="mb-2 text-sm text-slate-500 font-medium">Click to upload or drag and drop</p>
+                  <p className="text-xs text-slate-400">CSV files only</p>
+                </div>
+                <input id="file" name="file" type="file" accept=".csv" className="hidden" required />
+              </label>
+            </div>
           </div>
 
-          <button
-            type="submit"
-            disabled={isPending}
-            className="w-full inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-rose-600 hover:bg-rose-700 focus:outline-none disabled:opacity-50"
-          >
-            {isPending ? "Uploading..." : "Upload and Process CSV"}
-          </button>
+          <div className="pt-6 border-t border-slate-100">
+            <button
+              type="submit"
+              className="w-full bg-sfrs-red text-white font-bold py-4 px-6 rounded-md shadow-lg hover:bg-sfrs-red/90 active:scale-[0.98] transition-all min-h-[44px]"
+            >
+              Upload and Process
+            </button>
+          </div>
         </form>
-
-        {results && (
-          <div className="mt-6 border-t pt-6">
-            <h3 className="text-lg font-medium text-slate-900 mb-4">Results</h3>
-            <p className="text-green-700 font-medium">
-              Successfully processed {results.success} items.
-            </p>
-            {results.errors && results.errors.length > 0 && (
-              <div className="mt-4 space-y-2">
-                <p className="text-red-700 font-medium">
-                  Errors ({results.errors.length}):
-                </p>
-                <ul className="list-disc list-inside text-sm text-red-600 bg-red-50 p-4 border border-red-100 rounded-md">
-                  {results.errors.map((err, i) => (
-                    <li key={i}>{err}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
-        )}
       </div>
     </div>
   );
