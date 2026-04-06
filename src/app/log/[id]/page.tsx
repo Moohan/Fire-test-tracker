@@ -1,8 +1,7 @@
 "use client";
 
-import { useSession } from "next-auth/react";
 import { useRouter, useParams } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { db } from "@/lib/db";
@@ -10,7 +9,6 @@ import { db } from "@/lib/db";
 export default function LogTestPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
-  const { data: session } = useSession();
   const [type, setType] = useState<"VISUAL" | "FUNCTIONAL" | "ACCEPTANCE">("VISUAL");
   const [result, setResult] = useState<"PASS" | "FAIL">("PASS");
   const [notes, setNotes] = useState("");

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { db } from "@/lib/db";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -9,7 +9,7 @@ export default function SyncManager() {
   const [pendingCount, setPendingCount] = useState(0);
   const queryClient = useQueryClient();
 
-  const sync = async () => {
+  const sync = useCallback(async () => {
     if (isSyncing || !navigator.onLine) return;
 
     const pending = await db.pendingLogs.toArray();
@@ -53,9 +53,11 @@ export default function SyncManager() {
     if (pending.length > remaining) {
       queryClient.invalidateQueries({ queryKey: ["equipment-dashboard"] });
     }
-  };
+  }, [isSyncing, queryClient]);
 
   useEffect(() => {
+    // Avoid direct setState during render/mount inside Effect if possible
+    // but standard pattern is to trigger async sync
     sync();
 
     const handleOnline = () => sync();
@@ -67,7 +69,7 @@ export default function SyncManager() {
       window.removeEventListener('online', handleOnline);
       clearInterval(interval);
     };
-  }, []);
+  }, [sync]);
 
   if (pendingCount === 0) return null;
 

@@ -104,7 +104,7 @@ export async function saveEquipment(formData: FormData, id?: string) {
 
   try {
     if (id) {
-      await prisma.([
+      await prisma.$transaction([
         prisma.testRequirement.deleteMany({ where: { equipmentId: id } }),
         prisma.equipment.update({
           where: { id },

@@ -108,7 +108,7 @@ export async function bulkUploadEquipment(formData: FormData) {
       });
 
       if (equipment) {
-        await prisma.([
+        await prisma.$transaction([
           prisma.testRequirement.deleteMany({ where: { equipmentId: equipment.id } }),
           prisma.equipment.update({
             where: { id: equipment.id },

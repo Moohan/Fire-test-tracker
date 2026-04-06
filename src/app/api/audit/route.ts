@@ -18,7 +18,7 @@ export async function GET(req: Request) {
     where: {
       equipmentId: equipmentId || undefined,
       userId: userId || undefined,
-      result: result || (undefined as any),
+      result: result || undefined,
     },
     include: {
       equipment: {
@@ -47,7 +47,7 @@ export async function DELETE(req: Request) {
   try {
     await prisma.testLog.delete({ where: { id } });
     return NextResponse.json({ success: true });
-  } catch (err) {
+  } catch {
     return NextResponse.json({ error: "Failed to delete log" }, { status: 500 });
   }
 }
