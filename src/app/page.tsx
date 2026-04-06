@@ -39,12 +39,20 @@ export default function Home() {
                 </p>
               </div>
               {session.user.role === "ADMIN" && (
-                <Link
-                  href="/admin/equipment"
-                  className="w-full flex justify-center py-2 px-4 border border-rose-600 rounded-md shadow-sm text-sm font-medium text-rose-600 bg-white hover:bg-rose-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-rose-500"
-                >
-                  Manage Equipment
-                </Link>
+                <div className="flex flex-col space-y-2">
+                  <Link
+                    href="/admin/equipment"
+                    className="w-full flex justify-center py-2 px-4 border border-rose-600 rounded-md shadow-sm text-sm font-medium text-rose-600 bg-white hover:bg-rose-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-rose-500"
+                  >
+                    Manage Equipment
+                  </Link>
+                  <Link
+                    href="/admin/users"
+                    className="w-full flex justify-center py-2 px-4 border border-rose-600 rounded-md shadow-sm text-sm font-medium text-rose-600 bg-white hover:bg-rose-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-rose-500"
+                  >
+                    Manage Users
+                  </Link>
+                </div>
               )}
               <button
                 onClick={() => signOut()}

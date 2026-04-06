@@ -7,7 +7,20 @@ import { revalidatePath } from "next/cache";
 import { writeFile, mkdir, unlink } from "fs/promises";
 import path from "path";
 import { redirect } from "next/navigation";
-import { Status } from "@/types/equipment";
+import { z } from "zod";
+
+const EquipmentSchema = z.object({
+  externalId: z.string().min(1, "External ID is required"),
+  name: z.string().min(1, "Name is required"),
+  location: z.string().min(1, "Location is required"),
+  category: z.string().min(1, "Category is required"),
+  status: z.enum(["ON_RUN", "OFF_RUN"]),
+});
+
+const RequirementSchema = z.object({
+  frequency: z.enum(["WEEKLY", "MONTHLY", "QUARTERLY", "ANNUAL"]),
+  type: z.enum(["VISUAL", "FUNCTIONAL"]),
+});
 
 async function ensureAdmin() {
   const session = await getServerSession(authOptions);
@@ -29,11 +42,19 @@ function getNormalizedProcedurePath(procedurePath: string): string {
 export async function saveEquipment(formData: FormData, id?: string) {
   await ensureAdmin();
 
-  const externalId = formData.get("externalId") as string;
-  const name = formData.get("name") as string;
-  const location = formData.get("location") as string;
-  const category = formData.get("category") as string;
-  const status = formData.get("status") as Status;
+  const validatedFields = EquipmentSchema.safeParse({
+    externalId: formData.get("externalId"),
+    name: formData.get("name"),
+    location: formData.get("location"),
+    category: formData.get("category"),
+    status: formData.get("status"),
+  });
+
+  if (!validatedFields.success) {
+    throw new Error(validatedFields.error.issues[0].message);
+  }
+
+  const { externalId, name, location, category, status } = validatedFields.data;
   const procedureFile = formData.get("procedureFile") as File;
 
   let procedurePath = (formData.get("currentProcedurePath") as string) || null;
@@ -63,13 +84,19 @@ export async function saveEquipment(formData: FormData, id?: string) {
   }
 
   // Handle requirements
-  const frequencies = ["WEEKLY", "MONTHLY", "QUARTERLY", "ANNUAL"];
+  const frequencies = ["WEEKLY", "MONTHLY", "QUARTERLY", "ANNUAL"] as const;
   const requirementsData = frequencies
-    .map((f) => ({
-      frequency: f,
-      type: formData.get(`req_${f}`) as string,
-    }))
-    .filter((r) => r.type && r.type !== "NONE");
+    .map((f) => {
+      const type = formData.get(`req_${f}`) as string;
+      if (!type || type === "NONE") return null;
+
+      const validatedReq = RequirementSchema.safeParse({ frequency: f, type });
+      if (!validatedReq.success) {
+        throw new Error(`Invalid requirement for ${f}: ${validatedReq.error.issues[0].message}`);
+      }
+      return validatedReq.data;
+    })
+    .filter((r): r is { frequency: "WEEKLY" | "MONTHLY" | "QUARTERLY" | "ANNUAL"; type: "VISUAL" | "FUNCTIONAL" } => r !== null);
 
   try {
     if (id) {
