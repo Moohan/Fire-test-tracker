@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "prepare": "husky"
+    "prepare": "husky",
+    "test": "vitest"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.1",
@@ -15,6 +16,7 @@
     "@prisma/client": "^6.4.1",
     "@types/papaparse": "^5.5.2",
     "bcrypt": "^6.0.0",
+    "date-fns": "^4.1.0",
     "next": "16.2.2",
     "next-auth": "^4.24.13",
     "papaparse": "^5.5.3",
@@ -32,6 +34,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vitest/ui": "^4.1.2",
     "eslint": "^9",
     "eslint-config-next": "16.2.2",
     "eslint-config-prettier": "^10.1.8",
@@ -41,6 +44,7 @@
     "prisma": "^6.4.1",
     "tailwindcss": "^4",
     "ts-node": "^10.9.2",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.2"
   }
 }
