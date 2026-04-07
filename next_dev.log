@@ -1,0 +1,57 @@
+
+> sfrs-ett@0.1.0 dev
+> next dev --webpack
+
+▲ Next.js 16.2.2 (webpack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.0.2:3000
+- Environments: .env
+✓ Ready in 550ms
+Attention: Next.js now collects completely anonymous telemetry regarding usage.
+This information is used to shape Next.js' roadmap and prioritize features.
+You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+https://nextjs.org/telemetry
+
+ ○ (pwa) PWA support is disabled.
+
+○ Compiling /login ...
+ GET /login 200 in 11.9s (next.js: 11.0s, application-code: 855ms)
+ GET /login 200 in 219ms (next.js: 97ms, application-code: 122ms)
+ GET /api/auth/providers 200 in 3.5s (next.js: 3.5s, application-code: 71ms)
+ GET /api/auth/session 200 in 4.7s (next.js: 4.6s, application-code: 76ms)
+○ Compiling /dashboard ...
+ GET /api/auth/csrf 200 in 4.1s (next.js: 3.7s, application-code: 410ms)
+ GET /dashboard 200 in 6.0s (next.js: 5.5s, application-code: 452ms)
+ GET /api/dashboard 401 in 1554ms (next.js: 1500ms, application-code: 54ms)
+ GET /api/auth/session 200 in 1533ms (next.js: 1494ms, application-code: 39ms)
+ GET /api/dashboard 401 in 15ms (next.js: 4ms, application-code: 11ms)
+ GET /login 200 in 345ms (next.js: 82ms, application-code: 263ms)
+ GET /api/auth/session 200 in 69ms (next.js: 38ms, application-code: 31ms)
+ GET /api/auth/providers 200 in 49ms (next.js: 37ms, application-code: 12ms)
+ GET /api/auth/csrf 200 in 32ms (next.js: 7ms, application-code: 25ms)
+prisma:query SELECT `main`.`User`.`id`, `main`.`User`.`username`, `main`.`User`.`passwordHash`, `main`.`User`.`role` FROM `main`.`User` WHERE (`main`.`User`.`username` = ? AND 1=1) LIMIT ? OFFSET ?
+ POST /api/auth/callback/credentials 200 in 144ms (next.js: 2ms, application-code: 142ms)
+ GET /api/auth/session 200 in 16ms (next.js: 2ms, application-code: 14ms)
+ GET / 200 in 2.5s (next.js: 2.5s, application-code: 69ms)
+ GET / 200 in 39ms (next.js: 3ms, application-code: 37ms)
+ GET /dashboard 200 in 81ms (next.js: 20ms, application-code: 61ms)
+ GET /dashboard 200 in 37ms (next.js: 3ms, application-code: 35ms)
+prisma:query SELECT `main`.`Equipment`.`id`, `main`.`Equipment`.`externalId`, `main`.`Equipment`.`name`, `main`.`Equipment`.`location`, `main`.`Equipment`.`category`, `main`.`Equipment`.`procedurePath`, `main`.`Equipment`.`status`, `main`.`Equipment`.`sfrsId`, `main`.`Equipment`.`mfrId` FROM `main`.`Equipment` WHERE 1=1 LIMIT ? OFFSET ?
+prisma:query SELECT `main`.`TestRequirement`.`id`, `main`.`TestRequirement`.`equipmentId`, `main`.`TestRequirement`.`frequency`, `main`.`TestRequirement`.`type` FROM `main`.`TestRequirement` WHERE `main`.`TestRequirement`.`equipmentId` IN (?) LIMIT ? OFFSET ?
+prisma:query SELECT `main`.`TestLog`.`id`, `main`.`TestLog`.`equipmentId`, `main`.`TestLog`.`userId`, `main`.`TestLog`.`timestamp`, `main`.`TestLog`.`type`, `main`.`TestLog`.`result`, `main`.`TestLog`.`notes` FROM `main`.`TestLog` WHERE `main`.`TestLog`.`equipmentId` IN (?) ORDER BY `main`.`TestLog`.`timestamp` DESC LIMIT ? OFFSET ?
+ GET /api/dashboard 200 in 803ms (next.js: 760ms, application-code: 43ms)
+ GET /log/cmnontyi80001j60ejt406dfr 200 in 1628ms (next.js: 1544ms, application-code: 84ms)
+prisma:query SELECT `main`.`Equipment`.`id`, `main`.`Equipment`.`externalId`, `main`.`Equipment`.`name`, `main`.`Equipment`.`location`, `main`.`Equipment`.`category`, `main`.`Equipment`.`procedurePath`, `main`.`Equipment`.`status`, `main`.`Equipment`.`sfrsId`, `main`.`Equipment`.`mfrId` FROM `main`.`Equipment` WHERE (`main`.`Equipment`.`id` = ? AND 1=1) LIMIT ? OFFSET ?
+prisma:query SELECT `main`.`TestRequirement`.`id`, `main`.`TestRequirement`.`equipmentId`, `main`.`TestRequirement`.`frequency`, `main`.`TestRequirement`.`type` FROM `main`.`TestRequirement` WHERE `main`.`TestRequirement`.`equipmentId` IN (?) LIMIT ? OFFSET ?
+ GET /api/equipment/cmnontyi80001j60ejt406dfr 200 in 2.5s (next.js: 2.4s, application-code: 39ms)
+prisma:query BEGIN IMMEDIATE
+prisma:query SELECT `main`.`Equipment`.`id`, `main`.`Equipment`.`externalId`, `main`.`Equipment`.`name`, `main`.`Equipment`.`location`, `main`.`Equipment`.`category`, `main`.`Equipment`.`procedurePath`, `main`.`Equipment`.`status`, `main`.`Equipment`.`sfrsId`, `main`.`Equipment`.`mfrId` FROM `main`.`Equipment` WHERE (`main`.`Equipment`.`id` = ? AND 1=1) LIMIT ? OFFSET ?
+prisma:query INSERT INTO `main`.`TestLog` (`id`, `equipmentId`, `userId`, `timestamp`, `type`, `result`, `notes`) VALUES (?,?,?,?,?,?,?) RETURNING `id` AS `id`, `equipmentId` AS `equipmentId`, `userId` AS `userId`, `timestamp` AS `timestamp`, `type` AS `type`, `result` AS `result`, `notes` AS `notes`
+prisma:query UPDATE `main`.`Equipment` SET `status` = ? WHERE (`main`.`Equipment`.`id` = ? AND 1=1) RETURNING `id` AS `id`, `externalId` AS `externalId`, `name` AS `name`, `location` AS `location`, `category` AS `category`, `procedurePath` AS `procedurePath`, `status` AS `status`, `sfrsId` AS `sfrsId`, `mfrId` AS `mfrId`
+ POST /api/tests/log 201 in 665ms (next.js: 624ms, application-code: 41ms)
+prisma:query COMMIT
+ GET /dashboard 200 in 92ms (next.js: 41ms, application-code: 51ms)
+ GET /dashboard 200 in 62ms (next.js: 4ms, application-code: 59ms)
+prisma:query SELECT `main`.`Equipment`.`id`, `main`.`Equipment`.`externalId`, `main`.`Equipment`.`name`, `main`.`Equipment`.`location`, `main`.`Equipment`.`category`, `main`.`Equipment`.`procedurePath`, `main`.`Equipment`.`status`, `main`.`Equipment`.`sfrsId`, `main`.`Equipment`.`mfrId` FROM `main`.`Equipment` WHERE 1=1 ORDER BY `main`.`Equipment`.`externalId` ASC LIMIT ? OFFSET ?
+ GET /admin/equipment 200 in 1562ms (next.js: 1194ms, application-code: 368ms)
+ GET /api/auth/session 200 in 56ms (next.js: 33ms, application-code: 23ms)

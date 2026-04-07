@@ -8,6 +8,10 @@ import {
   startOfYear,
   endOfYear,
   format,
+  subWeeks,
+  subMonths,
+  subQuarters,
+  subYears,
 } from "date-fns";
 import { Frequency } from "@/types/equipment";
 
@@ -50,6 +54,27 @@ export function getTestingWindow(frequency: Frequency, date: Date): TestingWindo
     default:
       return assertNever(frequency);
   }
+}
+
+export function getPreviousTestingWindow(frequency: Frequency, date: Date): TestingWindow {
+  let prevDate: Date;
+  switch (frequency) {
+    case "WEEKLY":
+      prevDate = subWeeks(date, 1);
+      break;
+    case "MONTHLY":
+      prevDate = subMonths(date, 1);
+      break;
+    case "QUARTERLY":
+      prevDate = subQuarters(date, 1);
+      break;
+    case "ANNUAL":
+      prevDate = subYears(date, 1);
+      break;
+    default:
+      return assertNever(frequency);
+  }
+  return getTestingWindow(frequency, prevDate);
 }
 
 /**
