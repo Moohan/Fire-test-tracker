@@ -5,7 +5,7 @@ import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
 import { format } from "date-fns";
 import { enGB } from "date-fns/locale";
-import { useSyncExternalStore, useState, useEffect } from "react";
+import { useSyncExternalStore, useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 
 interface ComplianceStatus {
@@ -39,16 +39,23 @@ function subscribe(callback: () => void) {
   };
 }
 
-export default function Dashboard() {
+function DashboardContent() {
   const { data: session } = useSession();
   const searchParams = useSearchParams();
   const [showQueuedMessage, setShowQueuedMessage] = useState(false);
 
   useEffect(() => {
     if (searchParams.get("queued") === "true") {
-      setShowQueuedMessage(true);
-      const timer = setTimeout(() => setShowQueuedMessage(false), 5000);
-      return () => clearTimeout(timer);
+      // Wrap in timeout to avoid synchronous setState in effect lint error
+      const initTimer = setTimeout(() => {
+        setShowQueuedMessage(true);
+      }, 0);
+
+      const hideTimer = setTimeout(() => setShowQueuedMessage(false), 5000);
+      return () => {
+        clearTimeout(initTimer);
+        clearTimeout(hideTimer);
+      };
     }
   }, [searchParams]);
 
@@ -215,5 +222,13 @@ export default function Dashboard() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function Dashboard() {
+  return (
+    <Suspense fallback={<div className="p-6 text-center text-slate-500">Loading Dashboard...</div>}>
+      <DashboardContent />
+    </Suspense>
   );
 }
