@@ -47,8 +47,9 @@ export function getTestingWindow(frequency: Frequency, date: Date): TestingWindo
         end: endOfYear(date),
         id: format(date, "yyyy"),
       };
+    default:
+      return assertNever(frequency);
   }
-  return assertNever(frequency);
 }
 
 /**

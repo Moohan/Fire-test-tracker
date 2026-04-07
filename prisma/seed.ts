@@ -16,7 +16,7 @@ async function main() {
     if (process.env.NODE_ENV === "production") {
       throw new Error("ADMIN_PASSWORD environment variable MUST be set for production seeding.");
     }
-    console.warn("ADMIN_PASSWORD not set, using default password 'admin123'.");
+    console.warn("ADMIN_PASSWORD not set, using default password.");
   }
 
   const passwordHash = await bcrypt.hash(adminPassword || "admin123", 10);
