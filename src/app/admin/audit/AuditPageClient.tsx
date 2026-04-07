@@ -32,16 +32,34 @@ interface AuditResponse {
   };
 }
 
+interface MetadataResponse {
+  equipment: { id: string; externalId: string; name: string }[];
+  users: { id: string; username: string }[];
+}
+
 export default function AuditPageClient() {
   const queryClient = useQueryClient();
   const [filterResult, setFilterResult] = useState<string>("");
+  const [filterEquipment, setFilterEquipment] = useState<string>("");
+  const [filterUser, setFilterUser] = useState<string>("");
   const [page, setPage] = useState(1);
 
+  const { data: metadata } = useQuery<MetadataResponse>({
+    queryKey: ["audit-metadata"],
+    queryFn: async () => {
+      const res = await fetch("/api/audit/metadata");
+      if (!res.ok) throw new Error("Failed to fetch metadata");
+      return res.json();
+    }
+  });
+
   const { data, isLoading } = useQuery<AuditResponse>({
-    queryKey: ["audit-logs", filterResult, page],
+    queryKey: ["audit-logs", filterResult, filterEquipment, filterUser, page],
     queryFn: async () => {
       const url = new URL("/api/audit", window.location.origin);
       if (filterResult) url.searchParams.set("result", filterResult);
+      if (filterEquipment) url.searchParams.set("equipmentId", filterEquipment);
+      if (filterUser) url.searchParams.set("userId", filterUser);
       url.searchParams.set("page", page.toString());
       const res = await fetch(url.toString());
       if (!res.ok) throw new Error("Failed to fetch audit logs");
@@ -61,7 +79,7 @@ export default function AuditPageClient() {
   });
 
   const handleDelete = (id: string) => {
-    if (confirm("Are you sure you want to delete this log entry? This will be soft-deleted and an audit event will be recorded.")) {
+    if (confirm("Are you sure you want to delete this log entry? This action is IRREVERSIBLE and will be recorded in the audit trail.")) {
       deleteMutation.mutate(id);
     }
   };
@@ -69,25 +87,62 @@ export default function AuditPageClient() {
   return (
     <div className="p-4 sm:p-6 bg-slate-50 min-h-screen">
       <div className="max-w-7xl mx-auto space-y-6">
-        <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <header className="flex flex-col gap-4">
           <div>
             <Link href="/admin/equipment" className="text-sm text-sfrs-red hover:underline mb-1 inline-block">← Back to Admin</Link>
             <h1 className="text-2xl font-bold text-slate-900 leading-tight">Audit History</h1>
           </div>
-          <div className="flex items-center space-x-2">
-            <label className="text-sm font-medium text-slate-700">Filter Result:</label>
-            <select
-              value={filterResult}
-              onChange={(e) => {
-                setFilterResult(e.target.value);
-                setPage(1);
-              }}
-              className="border-slate-300 rounded-md text-sm focus:ring-sfrs-red focus:border-sfrs-red p-2"
-            >
-              <option value="">All Results</option>
-              <option value="PASS">PASS</option>
-              <option value="FAIL">FAIL</option>
-            </select>
+
+          <div className="bg-white p-4 rounded-lg shadow-sm border border-slate-200 grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Result</label>
+              <select
+                value={filterResult}
+                onChange={(e) => {
+                  setFilterResult(e.target.value);
+                  setPage(1);
+                }}
+                className="w-full border-slate-300 rounded-md text-sm focus:ring-sfrs-red focus:border-sfrs-red p-2 min-h-[44px]"
+              >
+                <option value="">All Results</option>
+                <option value="PASS">PASS</option>
+                <option value="FAIL">FAIL</option>
+              </select>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Equipment</label>
+              <select
+                value={filterEquipment}
+                onChange={(e) => {
+                  setFilterEquipment(e.target.value);
+                  setPage(1);
+                }}
+                className="w-full border-slate-300 rounded-md text-sm focus:ring-sfrs-red focus:border-sfrs-red p-2 min-h-[44px]"
+              >
+                <option value="">All Equipment</option>
+                {metadata?.equipment.map(e => (
+                  <option key={e.id} value={e.id}>{e.externalId} - {e.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">User</label>
+              <select
+                value={filterUser}
+                onChange={(e) => {
+                  setFilterUser(e.target.value);
+                  setPage(1);
+                }}
+                className="w-full border-slate-300 rounded-md text-sm focus:ring-sfrs-red focus:border-sfrs-red p-2 min-h-[44px]"
+              >
+                <option value="">All Users</option>
+                {metadata?.users.map(u => (
+                  <option key={u.id} value={u.id}>{u.username}</option>
+                ))}
+              </select>
+            </div>
           </div>
         </header>
 
@@ -102,7 +157,7 @@ export default function AuditPageClient() {
                   <th className="px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Type</th>
                   <th className="px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Result</th>
                   <th className="px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Notes</th>
-                  <th className="px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Actions</th>
+                  <th className="px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -133,10 +188,10 @@ export default function AuditPageClient() {
                     <td className="px-4 py-4 text-sm text-slate-500 max-w-xs truncate" title={log.notes || ""}>
                       {log.notes || "-"}
                     </td>
-                    <td className="px-4 py-4 text-sm">
+                    <td className="px-4 py-4 text-sm text-right">
                       <button
                         onClick={() => handleDelete(log.id)}
-                        className="text-sfrs-red hover:text-sfrs-red/80 hover:underline transition-all font-bold text-xs uppercase"
+                        className="text-sfrs-red hover:bg-sfrs-red/10 transition-all font-bold text-xs uppercase px-3 py-2 rounded-md min-h-[44px] min-w-[64px]"
                       >
                         Delete
                       </button>
@@ -153,14 +208,14 @@ export default function AuditPageClient() {
                 <button
                   onClick={() => setPage(p => Math.max(1, p - 1))}
                   disabled={page === 1}
-                  className="relative inline-flex items-center px-4 py-2 border border-slate-300 text-sm font-medium rounded-md text-slate-700 bg-white hover:bg-slate-50 disabled:opacity-50"
+                  className="relative inline-flex items-center px-4 py-2 border border-slate-300 text-sm font-medium rounded-md text-slate-700 bg-white hover:bg-slate-50 disabled:opacity-50 min-h-[44px]"
                 >
                   Previous
                 </button>
                 <button
                   onClick={() => setPage(p => Math.min(data.pagination.totalPages, p + 1))}
                   disabled={page === data.pagination.totalPages}
-                  className="ml-3 relative inline-flex items-center px-4 py-2 border border-slate-300 text-sm font-medium rounded-md text-slate-700 bg-white hover:bg-slate-50 disabled:opacity-50"
+                  className="ml-3 relative inline-flex items-center px-4 py-2 border border-slate-300 text-sm font-medium rounded-md text-slate-700 bg-white hover:bg-slate-50 disabled:opacity-50 min-h-[44px]"
                 >
                   Next
                 </button>
@@ -177,7 +232,7 @@ export default function AuditPageClient() {
                     <button
                       onClick={() => setPage(p => Math.max(1, p - 1))}
                       disabled={page === 1}
-                      className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-slate-300 bg-white text-sm font-medium text-slate-500 hover:bg-slate-50 disabled:opacity-50"
+                      className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-slate-300 bg-white text-sm font-medium text-slate-500 hover:bg-slate-50 disabled:opacity-50 min-h-[44px]"
                     >
                       <span className="sr-only">Previous</span>
                       ←
@@ -186,7 +241,7 @@ export default function AuditPageClient() {
                       <button
                         key={i+1}
                         onClick={() => setPage(i+1)}
-                        className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                        className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium min-h-[44px] ${
                           page === i+1
                             ? "z-10 bg-sfrs-red border-sfrs-red text-white"
                             : "bg-white border-slate-300 text-slate-500 hover:bg-slate-50"
@@ -198,7 +253,7 @@ export default function AuditPageClient() {
                     <button
                       onClick={() => setPage(p => Math.min(data.pagination.totalPages, p + 1))}
                       disabled={page === data.pagination.totalPages}
-                      className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-slate-300 bg-white text-sm font-medium text-slate-500 hover:bg-slate-50 disabled:opacity-50"
+                      className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-slate-300 bg-white text-sm font-medium text-slate-500 hover:bg-slate-50 disabled:opacity-50 min-h-[44px]"
                     >
                       <span className="sr-only">Next</span>
                       →
