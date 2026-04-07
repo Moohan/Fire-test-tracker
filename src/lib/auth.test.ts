@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, Mock } from 'vitest';
 
 // 1. Setup mocks before any relative imports
 vi.mock('@/lib/prisma', () => ({
@@ -32,20 +32,20 @@ describe('authorizeUser', () => {
   });
 
   it('should return null if user is not found in database', async () => {
-    (prisma.user.findUnique as any).mockResolvedValue(null);
+    (prisma.user.findUnique as Mock).mockResolvedValue(null);
     const result = await authorizeUser({ username: 'testuser', password: 'password123' });
     expect(result).toBeNull();
     expect(prisma.user.findUnique).toHaveBeenCalled();
   });
 
   it('should return null if bcrypt compare fails', async () => {
-    (prisma.user.findUnique as any).mockResolvedValue({
+    (prisma.user.findUnique as Mock).mockResolvedValue({
       id: '1',
       username: 'testuser',
       passwordHash: 'hashed',
       role: 'USER',
     });
-    (bcrypt.compare as any).mockResolvedValue(false);
+    (bcrypt.compare as Mock).mockResolvedValue(false);
 
     const result = await authorizeUser({ username: 'testuser', password: 'wrongpassword' });
     expect(result).toBeNull();
@@ -58,8 +58,8 @@ describe('authorizeUser', () => {
       passwordHash: 'hashed',
       role: 'USER',
     };
-    (prisma.user.findUnique as any).mockResolvedValue(user);
-    (bcrypt.compare as any).mockResolvedValue(true);
+    (prisma.user.findUnique as Mock).mockResolvedValue(user);
+    (bcrypt.compare as Mock).mockResolvedValue(true);
 
     const result = await authorizeUser({ username: 'testuser', password: 'password123' });
     expect(result).toEqual({

@@ -11,8 +11,6 @@ const CredentialsSchema = z.object({
   password: z.string().min(1, "Password is required"),
 });
 
-type ValidatedCredentials = z.infer<typeof CredentialsSchema>;
-
 /**
  * Authorizes a user based on provided credentials.
  * Extracted for testability and to enforce strict schema validation.
@@ -76,16 +74,16 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
-        token.username = (user as any).username;
-        token.role = (user as any).role;
+        token.username = user.username;
+        token.role = user.role;
       }
       return token;
     },
     async session({ session, token }) {
       if (token && session.user) {
-        session.user.id = token.id as string;
-        session.user.username = token.username as string;
-        session.user.role = token.role as string;
+        session.user.id = token.id;
+        session.user.username = token.username;
+        session.user.role = token.role;
       }
       return session;
     },
