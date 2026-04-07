@@ -18,7 +18,6 @@ export async function GET(req: Request) {
   const skip = (page - 1) * limit;
 
   const where = {
-    deletedAt: null,
     equipmentId: equipmentId || undefined,
     userId: userId || undefined,
     result: result || undefined,
@@ -71,7 +70,9 @@ export async function DELETE(req: Request) {
         include: { equipment: true }
       });
 
-      if (!log) throw new Error("Log not found");
+      if (!log) {
+        throw new Error("LOG_NOT_FOUND");
+      }
 
       // 2. Perform irreversible (hard) delete
       await tx.testLog.delete({
@@ -101,7 +102,6 @@ export async function DELETE(req: Request) {
           where: {
             equipmentId: log.equipmentId,
             result: "FAIL",
-            deletedAt: null
           }
         });
 
@@ -118,6 +118,9 @@ export async function DELETE(req: Request) {
 
     return NextResponse.json(result);
   } catch (error: unknown) {
+    if (error instanceof Error && error.message === "LOG_NOT_FOUND") {
+      return NextResponse.json({ error: "Log entry not found" }, { status: 404 });
+    }
     console.error("Failed to delete log:", error);
     const message = error instanceof Error ? error.message : "Failed to delete log";
     return NextResponse.json({ error: message }, { status: 500 });
