@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: sfrs-ett
+    runtime: docker
+    env: docker
+    plan: free
+    region: oregon
+    envVars:
+      - key: DATABASE_URL
+        value: "file:/app/prisma/dev.db"
+      - key: NEXTAUTH_SECRET
+        generateValue: true
+      - key: NEXTAUTH_URL
+        value: "https://sfrs-ett.onrender.com"
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: ALLOW_PRODUCTION_SEED
+        value: "true"
+      - key: NEXT_TELEMETRY_DISABLED
+        value: "1"
