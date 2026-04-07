@@ -18,7 +18,6 @@ export async function GET(req: Request) {
   const skip = (page - 1) * limit;
 
   const where = {
-    deletedAt: null,
     equipmentId: equipmentId || undefined,
     userId: userId || undefined,
     result: result || undefined,
@@ -64,22 +63,66 @@ export async function DELETE(req: Request) {
   if (!id) return NextResponse.json({ error: "Missing ID" }, { status: 400 });
 
   try {
-    await prisma.$transaction([
-      prisma.testLog.update({
+    const result = await prisma.$transaction(async (tx) => {
+      // 1. Get the log to be deleted
+      const log = await tx.testLog.findUnique({
         where: { id },
-        data: { deletedAt: new Date() }
-      }),
-      prisma.auditEvent.create({
+        include: { equipment: true }
+      });
+
+      if (!log) {
+        throw new Error("LOG_NOT_FOUND");
+      }
+
+      // 2. Perform irreversible (hard) delete
+      await tx.testLog.delete({
+        where: { id }
+      });
+
+      // 3. Record the audit event
+      await tx.auditEvent.create({
         data: {
           actorId: session.user.id,
           action: "DELETE_TEST_LOG",
           targetId: id,
           timestamp: new Date(),
+          metadata: JSON.stringify({
+            equipmentId: log.equipmentId,
+            type: log.type,
+            result: log.result,
+            timestamp: log.timestamp
+          })
         }
-      })
-    ]);
-    return NextResponse.json({ success: true });
-  } catch {
-    return NextResponse.json({ error: "Failed to delete log" }, { status: 500 });
+      });
+
+      // 4. OTR Reversion Logic
+      // If the deleted log was a FAIL, check if we can bring the equipment back ON_RUN
+      if (log.result === "FAIL" && log.equipment.status === "OFF_RUN") {
+        const remainingFails = await tx.testLog.count({
+          where: {
+            equipmentId: log.equipmentId,
+            result: "FAIL",
+          }
+        });
+
+        if (remainingFails === 0) {
+          await tx.equipment.update({
+            where: { id: log.equipmentId },
+            data: { status: "ON_RUN" }
+          });
+        }
+      }
+
+      return { success: true };
+    });
+
+    return NextResponse.json(result);
+  } catch (error: unknown) {
+    if (error instanceof Error && error.message === "LOG_NOT_FOUND") {
+      return NextResponse.json({ error: "Log entry not found" }, { status: 404 });
+    }
+    console.error("Failed to delete log:", error);
+    const message = error instanceof Error ? error.message : "Failed to delete log";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
