@@ -45,7 +45,6 @@ model TestLog {
   type        String
   result      String
   notes       String?
-  deletedAt   DateTime?
   user        User      @relation(fields: [userId], references: [id])
   equipment   Equipment @relation(fields: [equipmentId], references: [id])
 }

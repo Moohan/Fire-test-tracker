@@ -54,8 +54,11 @@ To ensure consistency and ease of agentic development, the following stack is ma
   - While OTR, scheduled tests must still be attempted and logged until repaired/replaced.
 
 ### 3.3 Dashboard & Logging
-- **Compliance View**:
-  - Visual indicators: Green (Complete for period), Red (Outstanding/Overdue), Amber (Failed/OTR).
+- **Compliance View Indicators**:
+  - **Green (PASSED)**: Successful test in current window.
+  - **Red (FAILED/OTR)**: Failed test in current window OR equipment status is OFF_RUN.
+  - **Amber (OVERDUE)**: No successful test in current window AND no successful test in the previous window.
+  - **Grey (OUTSTANDING)**: No successful test in current window, but the previous window was satisfied.
   - Real-time updates via 30s polling to prevent duplicate testing.
 - **Recording a Test**:
   - Select Equipment -> Select Test Type -> Result (Pass/Fail) -> Notes (Optional) -> Timestamp & User ID (Automatic).
@@ -90,6 +93,7 @@ The system accepts a CSV with the following headers:
   - `sfrs-red`: `#D1121F`
   - `sfrs-green`: `#00843D`
   - `sfrs-amber`: `#FFB81C`
+  - `sfrs-grey`: `#64748B`
 - **Procedure Access**: One-tap access to EICs from the testing screen.
 
 ## 6. Success Criteria

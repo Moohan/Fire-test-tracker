@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { getTestingWindow } from "@/lib/testing-windows";
+import { getTestingWindow, getPreviousTestingWindow } from "@/lib/testing-windows";
 import { Frequency } from "@/types/equipment";
 
 export async function GET() {
@@ -15,7 +15,6 @@ export async function GET() {
     include: {
       requirements: true,
       testLogs: {
-        where: { deletedAt: null },
         orderBy: { timestamp: "desc" },
       },
     },
@@ -26,37 +25,67 @@ export async function GET() {
   const dashboardData = equipment.map((item) => {
     const compliance = item.requirements.map((req) => {
       const freq = req.frequency as Frequency;
-      const window = getTestingWindow(freq, now);
+      const currentWindow = getTestingWindow(freq, now);
+      const prevWindow = getPreviousTestingWindow(freq, now);
 
-      const logsInWindow = item.testLogs.filter((log) => {
+      const logsInCurrent = item.testLogs.filter((log) => {
         const logDate = new Date(log.timestamp);
-        return logDate >= window.start && logDate <= window.end;
+        return logDate >= currentWindow.start && logDate <= currentWindow.end;
       });
 
-      const hasFail = logsInWindow.some((log) => log.result === "FAIL");
+      const logsInPrev = item.testLogs.filter((log) => {
+        const logDate = new Date(log.timestamp);
+        return logDate >= prevWindow.start && logDate <= prevWindow.end;
+      });
 
-      let satisfied = false;
-      if (req.type === "VISUAL") {
-        satisfied = logsInWindow.some(log =>
-          log.result === "PASS" &&
-          (log.type === "VISUAL" || log.type === "FUNCTIONAL" || log.type === "ACCEPTANCE")
-        );
-      } else if (req.type === "FUNCTIONAL") {
-        satisfied = logsInWindow.some(log =>
-          log.result === "PASS" &&
-          (log.type === "FUNCTIONAL" || log.type === "ACCEPTANCE")
-        );
+      const hasFailInCurrent = logsInCurrent.some((log) => log.result === "FAIL");
+
+      // Logic for Satisfaction:
+      // VISUAL is satisfied if a PASS test (of any type) exists.
+      // FUNCTIONAL is satisfied if a PASS Functional or Acceptance exists.
+      const isSatisfied = (logs: typeof item.testLogs, type: string) => {
+        if (type === "VISUAL") {
+          return logs.some(log =>
+            log.result === "PASS" &&
+            (log.type === "VISUAL" || log.type === "FUNCTIONAL" || log.type === "ACCEPTANCE")
+          );
+        } else if (type === "FUNCTIONAL") {
+          return logs.some(log =>
+            log.result === "PASS" &&
+            (log.type === "FUNCTIONAL" || log.type === "ACCEPTANCE")
+          );
+        }
+        return false;
+      };
+
+      const currentSatisfied = isSatisfied(logsInCurrent, req.type);
+      const prevSatisfied = isSatisfied(logsInPrev, req.type);
+
+      // Status determined by colors:
+      // Green: PASSED
+      // Red: FAILED (in current) OR OTR
+      // Amber: OVERDUE (Not passed in current AND Not passed in previous)
+      // Grey: OUTSTANDING (Not passed in current BUT was passed in previous)
+
+      let status: "PASSED" | "FAILED" | "OVERDUE" | "OUTSTANDING";
+
+      if (currentSatisfied) {
+        status = "PASSED";
+      } else if (hasFailInCurrent || item.status === "OFF_RUN") {
+        status = "FAILED";
+      } else if (!prevSatisfied) {
+        status = "OVERDUE";
       } else {
-        // Default catch-all for potential future types or exact matching
-        satisfied = logsInWindow.some(log => log.result === "PASS" && log.type === req.type);
+        status = "OUTSTANDING";
       }
 
       return {
         frequency: freq,
         type: req.type,
-        satisfied,
-        hasFail,
-        windowId: window.id
+        status,
+        satisfied: currentSatisfied,
+        hasFail: hasFailInCurrent,
+        windowId: currentWindow.id
       };
     });
 

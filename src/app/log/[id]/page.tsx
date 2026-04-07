@@ -89,18 +89,30 @@ export default function LogTestPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-slate-50">
-      <header className="bg-white shadow-sm px-6 py-4 flex items-center sticky top-0 z-10">
-        <Link
-          href="/dashboard"
-          aria-label="Back to dashboard"
-          className="mr-4 text-slate-500 hover:text-slate-900 flex items-center justify-center w-11 h-11 rounded-full hover:bg-slate-100 transition-colors"
-        >
-          <span aria-hidden="true">←</span>
-        </Link>
-        <div>
-          <h1 className="text-xl font-bold text-slate-900 leading-none">Record Test</h1>
-          <p className="text-sm text-slate-500 leading-none mt-1">{item.name}</p>
+      <header className="bg-white shadow-sm px-6 py-4 flex items-center justify-between sticky top-0 z-10">
+        <div className="flex items-center">
+          <Link
+            href="/dashboard"
+            aria-label="Back to dashboard"
+            className="mr-4 text-slate-500 hover:text-slate-900 flex items-center justify-center w-11 h-11 rounded-full hover:bg-slate-100 transition-colors"
+          >
+            <span aria-hidden="true">←</span>
+          </Link>
+          <div className="min-w-0">
+            <h1 className="text-xl font-bold text-slate-900 leading-none truncate">Record Test</h1>
+            <p className="text-sm text-slate-500 leading-none mt-1 truncate">{item.name}</p>
+          </div>
         </div>
+        {item.procedurePath && (
+          <a
+            href={item.procedurePath}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="bg-white border border-slate-300 text-slate-700 text-xs font-bold py-2.5 px-4 rounded-md shadow-sm hover:bg-slate-50 min-h-[44px] flex items-center uppercase tracking-wider"
+          >
+            View EIC
+          </a>
+        )}
       </header>
 
       <main className="flex-1 p-4 sm:p-6 max-w-2xl mx-auto w-full">
@@ -126,7 +138,7 @@ export default function LogTestPage() {
                     key={t}
                     type="button"
                     onClick={() => setType(t)}
-                    className={`py-3 px-4 rounded-md text-sm font-bold border transition-all min-h-[44px] ${
+                    className={`py-4 px-4 rounded-md text-sm font-bold border transition-all min-h-[44px] ${
                       type === t
                         ? "bg-sfrs-red border-sfrs-red text-white shadow-md ring-2 ring-sfrs-red/30 ring-offset-2"
                         : "bg-white border-slate-300 text-slate-700 hover:bg-slate-50"
@@ -144,7 +156,7 @@ export default function LogTestPage() {
                 <button
                   type="button"
                   onClick={() => setResult("PASS")}
-                  className={`py-3 px-4 rounded-md text-sm font-bold border transition-all min-h-[44px] flex items-center justify-center ${
+                  className={`py-4 px-4 rounded-md text-sm font-bold border transition-all min-h-[44px] flex items-center justify-center ${
                     result === "PASS"
                       ? "bg-sfrs-green border-sfrs-green text-white shadow-md ring-2 ring-sfrs-green/30 ring-offset-2"
                       : "bg-white border-slate-300 text-slate-700 hover:bg-slate-50"
@@ -155,7 +167,7 @@ export default function LogTestPage() {
                 <button
                   type="button"
                   onClick={() => setResult("FAIL")}
-                  className={`py-3 px-4 rounded-md text-sm font-bold border transition-all min-h-[44px] flex items-center justify-center ${
+                  className={`py-4 px-4 rounded-md text-sm font-bold border transition-all min-h-[44px] flex items-center justify-center ${
                     result === "FAIL"
                       ? "bg-sfrs-red border-sfrs-red text-white shadow-md ring-2 ring-sfrs-red/30 ring-offset-2"
                       : "bg-white border-slate-300 text-slate-700 hover:bg-slate-50"
@@ -182,7 +194,7 @@ export default function LogTestPage() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full bg-sfrs-red text-white font-bold py-4 px-6 rounded-md shadow-lg hover:bg-sfrs-red/90 active:scale-[0.98] transition-all disabled:opacity-50 disabled:active:scale-100 min-h-[44px]"
+                className="w-full bg-sfrs-red text-white font-bold py-5 px-6 rounded-md shadow-lg hover:bg-sfrs-red/90 active:scale-[0.98] transition-all disabled:opacity-50 disabled:active:scale-100 min-h-[56px]"
               >
                 {isSubmitting ? "Processing..." : isOffline ? "Queue Test Result" : "Confirm Result"}
               </button>

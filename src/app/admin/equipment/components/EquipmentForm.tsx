@@ -52,7 +52,7 @@ export default function EquipmentForm({ initialData }: EquipmentFormProps) {
           <div>
             <label
               htmlFor="externalId"
-              className="block text-sm font-medium text-slate-700"
+              className="block text-sm font-medium text-slate-700 uppercase tracking-wider"
             >
               External ID (Unique)
             </label>
@@ -62,14 +62,14 @@ export default function EquipmentForm({ initialData }: EquipmentFormProps) {
               id="externalId"
               required
               defaultValue={initialData?.externalId}
-              className="mt-1 block w-full border border-slate-300 rounded-md shadow-sm p-2"
+              className="mt-1 block w-full border border-slate-300 rounded-md shadow-sm p-3 min-h-[44px]"
             />
           </div>
 
           <div>
             <label
               htmlFor="name"
-              className="block text-sm font-medium text-slate-700"
+              className="block text-sm font-medium text-slate-700 uppercase tracking-wider"
             >
               Equipment Name
             </label>
@@ -79,14 +79,14 @@ export default function EquipmentForm({ initialData }: EquipmentFormProps) {
               id="name"
               required
               defaultValue={initialData?.name}
-              className="mt-1 block w-full border border-slate-300 rounded-md shadow-sm p-2"
+              className="mt-1 block w-full border border-slate-300 rounded-md shadow-sm p-3 min-h-[44px]"
             />
           </div>
 
           <div>
             <label
               htmlFor="sfrsId"
-              className="block text-sm font-medium text-slate-700"
+              className="block text-sm font-medium text-slate-700 uppercase tracking-wider"
             >
               SFRS ID
             </label>
@@ -95,14 +95,14 @@ export default function EquipmentForm({ initialData }: EquipmentFormProps) {
               name="sfrsId"
               id="sfrsId"
               defaultValue={initialData?.sfrsId || ""}
-              className="mt-1 block w-full border border-slate-300 rounded-md shadow-sm p-2"
+              className="mt-1 block w-full border border-slate-300 rounded-md shadow-sm p-3 min-h-[44px]"
             />
           </div>
 
           <div>
             <label
               htmlFor="mfrId"
-              className="block text-sm font-medium text-slate-700"
+              className="block text-sm font-medium text-slate-700 uppercase tracking-wider"
             >
               Manufacturer ID
             </label>
@@ -111,14 +111,14 @@ export default function EquipmentForm({ initialData }: EquipmentFormProps) {
               name="mfrId"
               id="mfrId"
               defaultValue={initialData?.mfrId || ""}
-              className="mt-1 block w-full border border-slate-300 rounded-md shadow-sm p-2"
+              className="mt-1 block w-full border border-slate-300 rounded-md shadow-sm p-3 min-h-[44px]"
             />
           </div>
 
           <div>
             <label
               htmlFor="location"
-              className="block text-sm font-medium text-slate-700"
+              className="block text-sm font-medium text-slate-700 uppercase tracking-wider"
             >
               Location
             </label>
@@ -128,14 +128,14 @@ export default function EquipmentForm({ initialData }: EquipmentFormProps) {
               id="location"
               required
               defaultValue={initialData?.location}
-              className="mt-1 block w-full border border-slate-300 rounded-md shadow-sm p-2"
+              className="mt-1 block w-full border border-slate-300 rounded-md shadow-sm p-3 min-h-[44px]"
             />
           </div>
 
           <div>
             <label
               htmlFor="category"
-              className="block text-sm font-medium text-slate-700"
+              className="block text-sm font-medium text-slate-700 uppercase tracking-wider"
             >
               Category
             </label>
@@ -145,14 +145,14 @@ export default function EquipmentForm({ initialData }: EquipmentFormProps) {
               id="category"
               required
               defaultValue={initialData?.category}
-              className="mt-1 block w-full border border-slate-300 rounded-md shadow-sm p-2"
+              className="mt-1 block w-full border border-slate-300 rounded-md shadow-sm p-3 min-h-[44px]"
             />
           </div>
 
           <div>
             <label
               htmlFor="status"
-              className="block text-sm font-medium text-slate-700"
+              className="block text-sm font-medium text-slate-700 uppercase tracking-wider"
             >
               Status
             </label>
@@ -160,7 +160,7 @@ export default function EquipmentForm({ initialData }: EquipmentFormProps) {
               name="status"
               id="status"
               defaultValue={initialData?.status || "ON_RUN"}
-              className="mt-1 block w-full border border-slate-300 rounded-md shadow-sm p-2"
+              className="mt-1 block w-full border border-slate-300 rounded-md shadow-sm p-3 min-h-[44px] bg-white"
             >
               <option value="ON_RUN">On the Run</option>
               <option value="OFF_RUN">Off the Run</option>
@@ -170,7 +170,7 @@ export default function EquipmentForm({ initialData }: EquipmentFormProps) {
           <div>
             <label
               htmlFor="procedureFile"
-              className="block text-sm font-medium text-slate-700"
+              className="block text-sm font-medium text-slate-700 uppercase tracking-wider"
             >
               Procedure File (PDF/Image)
             </label>
@@ -178,16 +178,16 @@ export default function EquipmentForm({ initialData }: EquipmentFormProps) {
               type="file"
               name="procedureFile"
               id="procedureFile"
-              className="mt-1 block w-full"
+              className="mt-1 block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-slate-50 file:text-slate-700 hover:file:bg-slate-100 min-h-[44px]"
             />
             {initialData?.procedurePath && (
-              <div className="mt-1 text-sm text-slate-500">
+              <div className="mt-2 text-sm text-slate-500">
                 Current:{" "}
                 <a
                   href={initialData.procedurePath}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-sfrs-red hover:underline"
+                  className="text-sfrs-red font-bold hover:underline"
                 >
                   View File
                 </a>
@@ -202,7 +202,7 @@ export default function EquipmentForm({ initialData }: EquipmentFormProps) {
         </div>
 
         <div className="mt-8">
-          <h3 className="text-lg font-medium text-slate-900 mb-4">
+          <h3 className="text-lg font-bold text-slate-900 mb-4 uppercase tracking-wider border-b pb-2">
             Test Requirements
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
@@ -212,13 +212,13 @@ export default function EquipmentForm({ initialData }: EquipmentFormProps) {
               );
               return (
                 <div key={freq}>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                  <label className="block text-xs font-bold text-slate-500 mb-1 uppercase tracking-tighter">
                     {freq}
                   </label>
                   <select
                     name={`req_${freq}`}
                     defaultValue={req?.type || "NONE"}
-                    className="block w-full border border-slate-300 rounded-md shadow-sm p-2"
+                    className="block w-full border border-slate-300 rounded-md shadow-sm p-3 min-h-[44px] bg-white"
                   >
                     <option value="NONE">None</option>
                     <option value="VISUAL">Visual</option>
@@ -234,7 +234,7 @@ export default function EquipmentForm({ initialData }: EquipmentFormProps) {
           <button
             type="submit"
             disabled={isPending || isDeleting}
-            className="w-full inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-sfrs-red hover:bg-sfrs-red/90 focus:outline-none disabled:opacity-50"
+            className="w-full inline-flex justify-center py-4 px-4 border border-transparent shadow-lg text-base font-bold rounded-md text-white bg-sfrs-red hover:bg-sfrs-red/90 focus:outline-none disabled:opacity-50 min-h-[56px] uppercase tracking-wider transition-all active:scale-[0.98]"
           >
             {isPending
               ? "Saving..."
@@ -251,7 +251,7 @@ export default function EquipmentForm({ initialData }: EquipmentFormProps) {
             type="button"
             onClick={handleDelete}
             disabled={isPending || isDeleting}
-            className="w-full inline-flex justify-center py-2 px-4 border border-slate-300 shadow-sm text-sm font-medium rounded-md text-sfrs-red bg-white hover:bg-sfrs-red/10 focus:outline-none disabled:opacity-50"
+            className="w-full inline-flex justify-center py-3 px-4 border border-slate-300 shadow-sm text-sm font-bold rounded-md text-sfrs-red bg-white hover:bg-sfrs-red/10 focus:outline-none disabled:opacity-50 min-h-[48px] uppercase tracking-wider transition-colors"
           >
             {isDeleting ? "Deleting..." : "Delete Equipment"}
           </button>

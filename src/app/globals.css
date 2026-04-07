@@ -3,17 +3,30 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  /* Brand Colors */
   --sfrs-red: #D1121F;
   --sfrs-green: #00843D;
   --sfrs-amber: #FFB81C;
+  --sfrs-grey: #64748b;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+
+  /* Color Mappings */
   --color-sfrs-red: var(--sfrs-red);
   --color-sfrs-green: var(--sfrs-green);
   --color-sfrs-amber: var(--sfrs-amber);
+  --color-sfrs-grey: var(--sfrs-grey);
+
+  /* Compliance Mappings */
+  --color-compliance-pass: var(--sfrs-green);
+  --color-compliance-fail: var(--sfrs-red);
+  --color-compliance-overdue: var(--sfrs-amber);
+  --color-compliance-outstanding: var(--sfrs-grey);
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
