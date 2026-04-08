@@ -43,6 +43,8 @@ The SFRS Equipment Testing Tracker is a Progressive Web App (PWA) designed for t
    DATABASE_URL="file:./prisma/dev.db"
    NEXTAUTH_SECRET="your-secret-here"
    NEXTAUTH_URL="http://localhost:3000"
+   ADMIN_PASSWORD="your-secure-password"
+   ALLOW_PRODUCTION_SEED="true" # Set to "true" to enable seeding in production
    ```
 
 3. **Initialize Database**:
