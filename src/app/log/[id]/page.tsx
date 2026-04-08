@@ -2,13 +2,14 @@
 
 import { useRouter, useParams } from "next/navigation";
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { db } from "@/lib/db";
 
 export default function LogTestPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [type, setType] = useState<"VISUAL" | "FUNCTIONAL" | "ACCEPTANCE">("VISUAL");
   const [result, setResult] = useState<"PASS" | "FAIL">("PASS");
   const [notes, setNotes] = useState("");
@@ -67,6 +68,13 @@ export default function LogTestPage() {
         const data = await res.json();
         throw new Error(data.error || "Failed to log test");
       }
+
+      // Invalidate relevant queries before navigating
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["equipment-dashboard"] }),
+        queryClient.invalidateQueries({ queryKey: ["audit-logs"] }),
+        queryClient.invalidateQueries({ queryKey: ["equipment-item", id] })
+      ]);
 
       router.push("/dashboard");
     } catch (err) {

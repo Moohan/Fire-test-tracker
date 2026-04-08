@@ -60,8 +60,9 @@ export default function SyncManager() {
       setIsSyncing(false);
       isSyncingRef.current = false;
 
-      // If we processed any successfully, invalidate dashboard
+      // If we processed any successfully, invalidate relevant queries
       queryClient.invalidateQueries({ queryKey: ["equipment-dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["audit-logs"] });
     }
   }, [queryClient]);
 
