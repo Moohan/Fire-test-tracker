@@ -17,6 +17,7 @@ export default async function ManageUsersPage() {
     select: {
       id: true,
       username: true,
+      fullName: true,
       role: true,
     },
   });

@@ -15,8 +15,9 @@ const PasswordPolicy = z.string()
 
 const UserSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
+  fullName: z.string().min(1, "Full name is required"),
   password: PasswordPolicy,
-  role: z.enum(["ADMIN", "USER"]),
+  role: z.enum(["ADMIN", "FIREFIGHTER", "CREW_COMMANDER", "WATCH_COMMANDER"]),
 });
 
 const PasswordResetSchema = z.object({
@@ -36,6 +37,7 @@ export async function createUser(formData: FormData) {
 
   const validatedFields = UserSchema.safeParse({
     username: formData.get("username"),
+    fullName: formData.get("fullName"),
     password: formData.get("password"),
     role: formData.get("role"),
   });
@@ -44,13 +46,14 @@ export async function createUser(formData: FormData) {
     throw new Error(validatedFields.error.issues[0].message);
   }
 
-  const { username, password, role } = validatedFields.data;
+  const { username, fullName, password, role } = validatedFields.data;
   const passwordHash = await bcrypt.hash(password, 10);
 
   try {
     await prisma.user.create({
       data: {
         username,
+        fullName,
         passwordHash,
         role,
       },

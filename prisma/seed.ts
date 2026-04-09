@@ -23,9 +23,13 @@ async function main() {
 
   const admin = await prisma.user.upsert({
     where: { username: "admin" },
-    update: {},
+    update: {
+      fullName: "System Administrator",
+      role: "ADMIN",
+    },
     create: {
       username: "admin",
+      fullName: "System Administrator",
       passwordHash,
       role: "ADMIN",
     },
@@ -50,7 +54,7 @@ async function main() {
   });
 
   console.log({
-    admin: { id: admin.id, username: admin.username, role: admin.role },
+    admin: { id: admin.id, username: admin.username, role: admin.role, fullName: admin.fullName },
     equipment: { id: e1.id, externalId: e1.externalId }
   });
 }

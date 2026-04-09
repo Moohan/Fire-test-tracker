@@ -4,6 +4,12 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getTestingWindow, getPreviousTestingWindow } from "@/lib/testing-windows";
 import { Frequency } from "@/types/equipment";
+import {
+  differenceInWeeks,
+  differenceInMonths,
+  differenceInQuarters,
+  differenceInYears
+} from "date-fns";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -16,6 +22,15 @@ export async function GET() {
       requirements: true,
       testLogs: {
         orderBy: { timestamp: "desc" },
+        include: {
+          user: {
+            select: {
+              username: true,
+              fullName: true,
+              role: true,
+            }
+          }
+        }
       },
     },
   });
@@ -40,10 +55,7 @@ export async function GET() {
 
       const hasFailInCurrent = logsInCurrent.some((log) => log.result === "FAIL");
 
-      // Logic for Satisfaction:
-      // VISUAL is satisfied if a PASS test (of any type) exists.
-      // FUNCTIONAL is satisfied if a PASS Functional or Acceptance exists.
-      const isSatisfied = (logs: typeof item.testLogs, type: string) => {
+      const isSatisfied = (logs: { result: string; type: string }[], type: string) => {
         if (type === "VISUAL") {
           return logs.some(log =>
             log.result === "PASS" &&
@@ -61,12 +73,6 @@ export async function GET() {
       const currentSatisfied = isSatisfied(logsInCurrent, req.type);
       const prevSatisfied = isSatisfied(logsInPrev, req.type);
 
-      // Status determined by colors:
-      // Green: PASSED
-      // Red: FAILED (in current) OR OTR
-      // Amber: OVERDUE (Not passed in current AND Not passed in previous)
-      // Grey: OUTSTANDING (Not passed in current BUT was passed in previous)
-
       let status: "PASSED" | "FAILED" | "OVERDUE" | "OUTSTANDING";
 
       if (currentSatisfied) {
@@ -79,13 +85,69 @@ export async function GET() {
         status = "OUTSTANDING";
       }
 
+      // Find the most recent relevant test log (regardless of window)
+      const relevantLogs = item.testLogs.filter(log => {
+        if (req.type === "VISUAL") {
+          return log.type === "VISUAL" || log.type === "FUNCTIONAL" || log.type === "ACCEPTANCE";
+        } else if (req.type === "FUNCTIONAL") {
+          return log.type === "FUNCTIONAL" || log.type === "ACCEPTANCE";
+        }
+        return false;
+      });
+
+      const lastTest = relevantLogs[0] || null;
+      let overdueLabel = null;
+
+      if (status === "OVERDUE" && lastTest) {
+        const lastDate = new Date(lastTest.timestamp);
+        let diff = 0;
+        let unit = "";
+
+        switch (freq) {
+          case "WEEKLY":
+            diff = differenceInWeeks(now, lastDate);
+            unit = diff === 1 ? "week" : "weeks";
+            break;
+          case "MONTHLY":
+            diff = differenceInMonths(now, lastDate);
+            unit = diff === 1 ? "month" : "months";
+            break;
+          case "QUARTERLY":
+            diff = differenceInQuarters(now, lastDate);
+            unit = diff === 1 ? "quarter" : "quarters";
+            break;
+          case "ANNUAL":
+            diff = differenceInYears(now, lastDate);
+            unit = diff === 1 ? "year" : "years";
+            break;
+        }
+
+        if (diff > 0) {
+          overdueLabel = `last test ${diff} ${unit} ago`;
+        } else {
+          // If diff is 0 but it's overdue, it means it was in the current window but maybe failed?
+          // No, OVERDUE means not passed in current and not passed in prev.
+          // If it was tested today but failed, status would be FAILED.
+          // So if it's OVERDUE, the last test must be at least from previous window or older.
+          overdueLabel = "last test < 1 unit ago";
+        }
+      } else if (status === "OVERDUE" && !lastTest) {
+        overdueLabel = "never tested";
+      }
+
       return {
         frequency: freq,
         type: req.type,
         status,
         satisfied: currentSatisfied,
         hasFail: hasFailInCurrent,
-        windowId: currentWindow.id
+        windowId: currentWindow.id,
+        lastTest: (status === "PASSED" || status === "FAILED") ? {
+          timestamp: lastTest?.timestamp,
+          user: lastTest?.user,
+          result: lastTest?.result
+        } : null,
+        overdueLabel
       };
     });
 

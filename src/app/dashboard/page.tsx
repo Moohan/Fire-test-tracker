@@ -1,7 +1,7 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
 import { useSession, signOut } from "next-auth/react";
+import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { format } from "date-fns";
 import { enGB } from "date-fns/locale";
@@ -15,6 +15,16 @@ interface ComplianceStatus {
   satisfied: boolean;
   hasFail: boolean;
   windowId: string;
+  lastTest?: {
+    timestamp: string;
+    user: {
+      username: string;
+      fullName: string | null;
+      role: string;
+    } | null;
+    result: string;
+  } | null;
+  overdueLabel?: string | null;
 }
 
 interface EquipmentItem {
@@ -39,6 +49,24 @@ function subscribe(callback: () => void) {
   };
 }
 
+const formatUserName = (user: { role: string; fullName: string | null; username: string } | null) => {
+  if (!user) return "Unknown";
+  if (user.role === "ADMIN") return "admin";
+
+  const rolePrefix = ({
+    "FIREFIGHTER": "FF",
+    "CREW_COMMANDER": "CC",
+    "WATCH_COMMANDER": "WC"
+  } as Record<string, string>)[user.role] || "";
+
+  if (!user.fullName) return user.username;
+
+  const names = user.fullName.trim().split(/\s+/);
+  const lastName = names[names.length - 1];
+
+  return `${rolePrefix} ${lastName}`.trim();
+};
+
 function DashboardContent() {
   const { data: session } = useSession();
   const searchParams = useSearchParams();
@@ -46,7 +74,6 @@ function DashboardContent() {
 
   useEffect(() => {
     if (searchParams.get("queued") === "true") {
-      // Wrap in timeout to avoid synchronous setState in effect lint error
       const initTimer = setTimeout(() => {
         setShowQueuedMessage(true);
       }, 0);
@@ -176,9 +203,22 @@ function DashboardContent() {
                     <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Compliance Status</h3>
                     <div className="grid grid-cols-1 gap-2">
                       {item.compliance.length > 0 ? item.compliance.map((c, idx) => (
-                        <div key={idx} className="flex items-center justify-between bg-slate-50/50 p-1.5 rounded border border-slate-100">
-                          <span className="text-[10px] font-bold text-slate-600 uppercase tracking-tighter">{c.frequency} {c.type}</span>
-                          <div className={`w-2.5 h-2.5 rounded-full shadow-sm ${getStatusColor(c.status)}`} title={c.status}></div>
+                        <div key={idx} className="flex flex-col bg-slate-50/50 p-2 rounded border border-slate-100">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-bold text-slate-600 uppercase tracking-tighter">{c.frequency} {c.type}</span>
+                            <div className={`w-2.5 h-2.5 rounded-full shadow-sm ${getStatusColor(c.status)}`} title={c.status}></div>
+                          </div>
+                          {c.status === "OVERDUE" && c.overdueLabel && (
+                            <p className="text-[9px] font-bold text-sfrs-amber uppercase mt-1">
+                              {c.overdueLabel}
+                            </p>
+                          )}
+                          {(c.status === "PASSED" || c.status === "FAILED") && c.lastTest && (
+                            <p className="text-[9px] text-slate-500 mt-1 flex justify-between">
+                              <span className="font-medium">{format(new Date(c.lastTest.timestamp), "dd/MM/yyyy")}</span>
+                              <span className="font-bold uppercase tracking-tighter">{formatUserName(c.lastTest.user)}</span>
+                            </p>
+                          )}
                         </div>
                       )) : <p className="text-[10px] text-slate-400 italic">No recurring tests configured.</p>}
                     </div>
