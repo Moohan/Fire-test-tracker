@@ -7,7 +7,7 @@ import EquipmentForm from "../components/EquipmentForm";
 export default async function NewEquipmentPage() {
   const session = await getServerSession(authOptions);
 
-  if (!session || session.user.role !== "ADMIN") {
+  if (!session || session?.user?.role !== "ADMIN") {
     redirect("/");
   }
 
