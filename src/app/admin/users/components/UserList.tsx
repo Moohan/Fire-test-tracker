@@ -6,6 +6,7 @@ import { deleteUser, resetPassword } from "../actions";
 interface User {
   id: string;
   username: string;
+  fullName: string | null;
   role: string;
 }
 
@@ -51,8 +52,11 @@ export default function UserList({ users, currentUserId }: UserListProps) {
           <li key={user.id} className="p-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <p className="text-xl font-bold text-slate-900 leading-none">{user.username}</p>
-                <p className="text-sm text-slate-500 mt-1 uppercase tracking-wider font-bold">{user.role}</p>
+                <p className="text-xl font-bold text-slate-900 leading-none">{user.fullName || user.username}</p>
+                <div className="flex items-center space-x-2 mt-1">
+                  <p className="text-sm text-slate-500 uppercase tracking-wider font-bold">{user.role}</p>
+                  {user.fullName && <p className="text-xs text-slate-400">({user.username})</p>}
+                </div>
               </div>
               <div className="flex items-center space-x-2">
                 <button

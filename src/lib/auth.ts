@@ -46,6 +46,7 @@ export async function authorizeUser(credentials: unknown): Promise<User | null> 
   return {
     id: user.id,
     username: user.username,
+    fullName: user.fullName,
     role: user.role,
   };
 }
@@ -75,6 +76,7 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.id = user.id;
         token.username = user.username;
+        token.fullName = user.fullName;
         token.role = user.role;
       }
       return token;
@@ -83,6 +85,7 @@ export const authOptions: NextAuthOptions = {
       if (token && session.user) {
         session.user.id = token.id;
         session.user.username = token.username;
+        session.user.fullName = token.fullName;
         session.user.role = token.role;
       }
       return session;

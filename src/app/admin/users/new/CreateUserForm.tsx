@@ -51,7 +51,24 @@ export default function CreateUserForm() {
             id="username"
             required
             className="mt-1 block w-full border border-slate-300 rounded-md shadow-sm p-3 focus:ring-sfrs-red focus:border-sfrs-red min-h-[44px]"
-            placeholder="e.g. firefighter_smith"
+            placeholder="e.g. jsmith"
+          />
+        </div>
+
+        <div>
+          <label
+            htmlFor="fullName"
+            className="block text-sm font-bold text-slate-700 uppercase tracking-wider mb-1"
+          >
+            Full Name
+          </label>
+          <input
+            type="text"
+            name="fullName"
+            id="fullName"
+            required
+            className="mt-1 block w-full border border-slate-300 rounded-md shadow-sm p-3 focus:ring-sfrs-red focus:border-sfrs-red min-h-[44px]"
+            placeholder="e.g. James Hayes"
           />
         </div>
 
@@ -88,11 +105,13 @@ export default function CreateUserForm() {
             name="role"
             id="role"
             required
-            defaultValue="USER"
+            defaultValue="FIREFIGHTER"
             className="mt-1 block w-full border border-slate-300 rounded-md shadow-sm p-3 focus:ring-sfrs-red focus:border-sfrs-red min-h-[44px]"
           >
-            <option value="USER">Firefighter (Standard User)</option>
-            <option value="ADMIN">Crew Commander (Admin)</option>
+            <option value="FIREFIGHTER">Firefighter (FF)</option>
+            <option value="CREW_COMMANDER">Crew Commander (CC)</option>
+            <option value="WATCH_COMMANDER">Watch Commander (WC)</option>
+            <option value="ADMIN">System Administrator</option>
           </select>
         </div>
       </div>
