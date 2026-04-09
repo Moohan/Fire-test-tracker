@@ -49,7 +49,7 @@ function subscribe(callback: () => void) {
   };
 }
 
-const formatUserName = (user: any) => {
+const formatUserName = (user: { role: string; fullName: string | null; username: string } | null) => {
   if (!user) return "Unknown";
   if (user.role === "ADMIN") return "admin";
 

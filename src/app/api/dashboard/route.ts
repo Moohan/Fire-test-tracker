@@ -55,7 +55,7 @@ export async function GET() {
 
       const hasFailInCurrent = logsInCurrent.some((log) => log.result === "FAIL");
 
-      const isSatisfied = (logs: any[], type: string) => {
+      const isSatisfied = (logs: { result: string; type: string }[], type: string) => {
         if (type === "VISUAL") {
           return logs.some(log =>
             log.result === "PASS" &&
