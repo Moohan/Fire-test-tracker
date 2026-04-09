@@ -1,0 +1,14 @@
+  if (isLoading) return <div className="p-6 text-center text-slate-500 font-medium">Loading Dashboard...</div>;
+  if (error && !equipment) {
+    return (
+      <div className="p-6 text-center space-y-4">
+        <div className="text-sfrs-red font-bold">Error: {(error as Error).message}</div>
+        <button
+          onClick={() => window.location.reload()}
+          className="bg-sfrs-red text-white px-4 py-2 rounded-md text-sm font-bold min-h-[44px]"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
