@@ -17,7 +17,7 @@ const UserSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
   fullName: z.string().min(1, "Full name is required"),
   password: PasswordPolicy,
-  role: z.enum(["ADMIN", "FIREFIGHTER", "CREW_COMMANDER", "WATCH_COMMANDER"]),
+  role: z.enum(["ADMIN", "FF", "CC", "WC"]),
 });
 
 const PasswordResetSchema = z.object({
@@ -26,7 +26,7 @@ const PasswordResetSchema = z.object({
 
 async function ensureAdmin() {
   const session = await getServerSession(authOptions);
-  if (!session || session.user.role !== "ADMIN") {
+  if (!session || !["ADMIN", "WC", "CC"].includes(session.user.role)) {
     throw new Error("Unauthorized");
   }
   return session;

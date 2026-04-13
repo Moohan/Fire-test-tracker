@@ -8,7 +8,8 @@ import {
   differenceInWeeks,
   differenceInMonths,
   differenceInQuarters,
-  differenceInYears
+  differenceInYears,
+  startOfYear
 } from "date-fns";
 
 export async function GET() {
@@ -17,7 +18,16 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const now = new Date();
+  const yearStart = startOfYear(now);
+
   const equipment = await prisma.equipment.findMany({
+    where: {
+      OR: [
+        { removedAt: null },
+        { removedAt: { gte: yearStart } }
+      ]
+    },
     include: {
       requirements: true,
       testLogs: {
@@ -35,9 +45,15 @@ export async function GET() {
     },
   });
 
-  const now = new Date();
-
   const dashboardData = equipment.map((item) => {
+    // If equipment is removed, it doesn't need compliance checking
+    if (item.removedAt) {
+      return {
+        ...item,
+        compliance: [],
+      };
+    }
+
     const compliance = item.requirements.map((req) => {
       const freq = req.frequency as Frequency;
       const currentWindow = getTestingWindow(freq, now);
@@ -125,10 +141,6 @@ export async function GET() {
         if (diff > 0) {
           overdueLabel = `last test ${diff} ${unit} ago`;
         } else {
-          // If diff is 0 but it's overdue, it means it was in the current window but maybe failed?
-          // No, OVERDUE means not passed in current and not passed in prev.
-          // If it was tested today but failed, status would be FAILED.
-          // So if it's OVERDUE, the last test must be at least from previous window or older.
           overdueLabel = "last test < 1 unit ago";
         }
       } else if (status === "OVERDUE" && !lastTest) {

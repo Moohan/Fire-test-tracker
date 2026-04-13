@@ -5,8 +5,10 @@ import Dexie, { Table } from 'dexie';
 export interface PendingTestLog {
   id?: number;
   equipmentId: string;
-  type: 'VISUAL' | 'FUNCTIONAL' | 'ACCEPTANCE';
+  type: string;
+  testCode?: string;
   result: 'PASS' | 'FAIL';
+  hoursUsed?: string;
   notes?: string;
   timestamp: string;
   syncError?: string;
@@ -18,8 +20,10 @@ export class ETTDatabase extends Dexie {
 
   constructor() {
     super('ETTDatabase');
-    this.version(2).stores({
+    this.version(3).stores({
       pendingLogs: '++id, equipmentId, timestamp'
+    }).upgrade(() => {
+       // Migration logic if needed
     });
   }
 }

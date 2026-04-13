@@ -7,7 +7,7 @@ import Link from "next/link";
 export default async function AdminEquipmentPage() {
   const session = await getServerSession(authOptions);
 
-  if (!session || session.user.role !== "ADMIN") {
+  if (!session || !["ADMIN", "WC", "CC"].includes(session.user.role)) {
     redirect("/");
   }
 

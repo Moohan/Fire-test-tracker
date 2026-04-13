@@ -104,7 +104,7 @@ export default function EquipmentForm({ initialData }: EquipmentFormProps) {
               htmlFor="mfrId"
               className="block text-sm font-medium text-slate-700 uppercase tracking-wider"
             >
-              Manufacturer ID
+              Manufacturer Serial No. (Mfr ID)
             </label>
             <input
               type="text"
@@ -165,6 +165,55 @@ export default function EquipmentForm({ initialData }: EquipmentFormProps) {
               <option value="ON_RUN">On the Run</option>
               <option value="OFF_RUN">Off the Run</option>
             </select>
+          </div>
+
+          <div>
+            <label
+              htmlFor="expiryDate"
+              className="block text-sm font-medium text-slate-700 uppercase tracking-wider"
+            >
+              Expiry / Removal Date
+            </label>
+            <input
+              type="date"
+              name="expiryDate"
+              id="expiryDate"
+              defaultValue={initialData?.expiryDate ? new Date(initialData.expiryDate).toISOString().split('T')[0] : ""}
+              className="mt-1 block w-full border border-slate-300 rounded-md shadow-sm p-3 min-h-[44px]"
+            />
+          </div>
+
+          <div className="flex items-center space-x-3 pt-6">
+            <input
+              type="checkbox"
+              name="statutoryExamination"
+              id="statutoryExamination"
+              value="true"
+              defaultChecked={initialData?.statutoryExamination}
+              className="h-5 w-5 text-sfrs-red border-slate-300 rounded"
+            />
+            <label
+              htmlFor="statutoryExamination"
+              className="text-sm font-medium text-slate-700 uppercase tracking-wider"
+            >
+              Subject to statutory / external examination
+            </label>
+          </div>
+
+          <div>
+            <label
+              htmlFor="removedAt"
+              className="block text-sm font-medium text-slate-700 uppercase tracking-wider"
+            >
+              Removed from Service Date
+            </label>
+            <input
+              type="date"
+              name="removedAt"
+              id="removedAt"
+              defaultValue={initialData?.removedAt ? new Date(initialData.removedAt).toISOString().split('T')[0] : ""}
+              className="mt-1 block w-full border border-slate-300 rounded-md shadow-sm p-3 min-h-[44px]"
+            />
           </div>
 
           <div>

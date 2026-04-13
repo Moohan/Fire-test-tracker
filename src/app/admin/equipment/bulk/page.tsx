@@ -7,7 +7,7 @@ import BulkUploadForm from "./BulkUploadForm";
 export default async function BulkUploadPage() {
   const session = await getServerSession(authOptions);
 
-  if (!session || session.user.role !== "ADMIN") {
+  if (!session || !["ADMIN", "WC", "CC"].includes(session.user.role)) {
     redirect("/");
   }
 

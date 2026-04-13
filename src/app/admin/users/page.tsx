@@ -8,7 +8,7 @@ import UserList from "./components/UserList";
 export default async function ManageUsersPage() {
   const session = await getServerSession(authOptions);
 
-  if (!session || session.user.role !== "ADMIN") {
+  if (!session || !["ADMIN", "WC", "CC"].includes(session.user.role)) {
     redirect("/");
   }
 

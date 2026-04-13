@@ -21,21 +21,33 @@ async function main() {
 
   const passwordHash = await bcrypt.hash(adminPassword || "admin123", 10);
 
-  const admin = await prisma.user.upsert({
+  // Users
+  await prisma.user.upsert({
     where: { username: "admin" },
-    update: {
-      fullName: "System Administrator",
-      role: "ADMIN",
-    },
-    create: {
-      username: "admin",
-      fullName: "System Administrator",
-      passwordHash,
-      role: "ADMIN",
-    },
+    update: { fullName: "System Administrator", role: "ADMIN" },
+    create: { username: "admin", fullName: "System Administrator", passwordHash, role: "ADMIN" },
   });
 
-  const e1 = await prisma.equipment.upsert({
+  await prisma.user.upsert({
+    where: { username: "wc_jones" },
+    update: { fullName: "WC Jones", role: "WC" },
+    create: { username: "wc_jones", fullName: "WC Jones", passwordHash, role: "WC" },
+  });
+
+  await prisma.user.upsert({
+    where: { username: "cc_smith" },
+    update: { fullName: "CC Smith", role: "CC" },
+    create: { username: "cc_smith", fullName: "CC Smith", passwordHash, role: "CC" },
+  });
+
+  await prisma.user.upsert({
+    where: { username: "ff_hayes" },
+    update: { fullName: "FF Hayes", role: "FF" },
+    create: { username: "ff_hayes", fullName: "FF Hayes", passwordHash, role: "FF" },
+  });
+
+  // Equipment
+  await prisma.equipment.upsert({
     where: { externalId: "E001" },
     update: {},
     create: {
@@ -53,10 +65,7 @@ async function main() {
     }
   });
 
-  console.log({
-    admin: { id: admin.id, username: admin.username, role: admin.role, fullName: admin.fullName },
-    equipment: { id: e1.id, externalId: e1.externalId }
-  });
+  console.log("Seeding complete.");
 }
 
 main()

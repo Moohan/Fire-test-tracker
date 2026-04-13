@@ -108,9 +108,9 @@ export default function CreateUserForm() {
             defaultValue="FIREFIGHTER"
             className="mt-1 block w-full border border-slate-300 rounded-md shadow-sm p-3 focus:ring-sfrs-red focus:border-sfrs-red min-h-[44px]"
           >
-            <option value="FIREFIGHTER">Firefighter (FF)</option>
-            <option value="CREW_COMMANDER">Crew Commander (CC)</option>
-            <option value="WATCH_COMMANDER">Watch Commander (WC)</option>
+            <option value="FF">Firefighter (FF)</option>
+            <option value="CC">Crew Commander (CC)</option>
+            <option value="WC">Watch Commander (WC)</option>
             <option value="ADMIN">System Administrator</option>
           </select>
         </div>
