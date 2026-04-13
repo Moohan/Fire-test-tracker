@@ -26,7 +26,7 @@ const PasswordResetSchema = z.object({
 
 async function ensureAdmin() {
   const session = await getServerSession(authOptions);
-  if (!session || session.user.role !== "ADMIN") {
+  if (!session || session?.user?.role !== "ADMIN") {
     throw new Error("Unauthorized");
   }
   return session;
@@ -71,7 +71,7 @@ export async function createUser(formData: FormData) {
 export async function deleteUser(id: string) {
   const session = await ensureAdmin();
 
-  if (id === session.user.id) {
+  if (id === session?.user?.id) {
     throw new Error("You cannot delete yourself");
   }
 

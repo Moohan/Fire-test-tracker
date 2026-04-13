@@ -27,9 +27,10 @@ const RequirementSchema = z.object({
 
 async function ensureAdmin() {
   const session = await getServerSession(authOptions);
-  if (!session || session.user.role !== "ADMIN") {
+  if (!session || session?.user?.role !== "ADMIN") {
     throw new Error("Unauthorized");
   }
+  return session;
 }
 
 /**

@@ -8,7 +8,7 @@ import UserList from "./components/UserList";
 export default async function ManageUsersPage() {
   const session = await getServerSession(authOptions);
 
-  if (!session || session.user.role !== "ADMIN") {
+  if (!session || session?.user?.role !== "ADMIN") {
     redirect("/");
   }
 
@@ -38,7 +38,7 @@ export default async function ManageUsersPage() {
       </header>
 
       <div className="bg-white shadow-sm border border-slate-200 rounded-lg overflow-hidden">
-        <UserList users={users} currentUserId={session.user.id} />
+        <UserList users={users} currentUserId={session?.user?.id} />
       </div>
     </div>
   );

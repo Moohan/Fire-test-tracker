@@ -6,7 +6,7 @@ import Link from "next/link";
 import { format } from "date-fns";
 import { enGB } from "date-fns/locale";
 import { useSyncExternalStore, useState, useEffect, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 
 interface ComplianceStatus {
   frequency: string;
@@ -68,6 +68,7 @@ const formatUserName = (user: { role: string; fullName: string | null; username:
 };
 
 function DashboardContent() {
+  const router = useRouter();
   const { data: session } = useSession();
   const searchParams = useSearchParams();
   const [showQueuedMessage, setShowQueuedMessage] = useState(false);
@@ -131,8 +132,20 @@ function DashboardContent() {
     return { label: "OK", classes: "bg-sfrs-green/10 text-sfrs-green border-sfrs-green/20" };
   };
 
-  if (isLoading) return <div className="p-6 text-center">Loading dashboard...</div>;
-  if (error && !equipment) return <div className="p-6 text-center text-sfrs-red">Error: {(error as Error).message}</div>;
+  if (isLoading) return <div className="p-6 text-center text-slate-500 font-medium">Loading Dashboard...</div>;
+  if (error && !equipment) {
+    return (
+      <div className="p-6 text-center space-y-4">
+        <div className="text-sfrs-red font-bold">Error: {(error as Error).message}</div>
+        <button
+          onClick={() => router.refresh()}
+          className="bg-sfrs-red text-white px-4 py-2 rounded-md text-sm font-bold min-h-[44px]"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-slate-50">
@@ -250,7 +263,7 @@ function DashboardContent() {
         </div>
       </main>
 
-      {session?.user.role === "ADMIN" && (
+      {session?.user?.role === "ADMIN" && (
         <div className="fixed bottom-6 right-6 z-40">
           <Link
             href="/admin/equipment"
