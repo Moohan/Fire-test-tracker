@@ -6,7 +6,7 @@ import Link from "next/link";
 import { format } from "date-fns";
 import { enGB } from "date-fns/locale";
 import { useSyncExternalStore, useState, useEffect, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 
 interface ComplianceStatus {
   frequency: string;
@@ -68,6 +68,7 @@ const formatUserName = (user: { role: string; fullName: string | null; username:
 };
 
 function DashboardContent() {
+  const router = useRouter();
   const { data: session } = useSession();
   const searchParams = useSearchParams();
   const [showQueuedMessage, setShowQueuedMessage] = useState(false);
@@ -137,7 +138,7 @@ function DashboardContent() {
       <div className="p-6 text-center space-y-4">
         <div className="text-sfrs-red font-bold">Error: {(error as Error).message}</div>
         <button
-          onClick={() => window.location.reload()}
+          onClick={() => router.refresh()}
           className="bg-sfrs-red text-white px-4 py-2 rounded-md text-sm font-bold min-h-[44px]"
         >
           Retry

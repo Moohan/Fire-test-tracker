@@ -30,6 +30,7 @@ async function ensureAdmin() {
   if (!session || session?.user?.role !== "ADMIN") {
     throw new Error("Unauthorized");
   }
+  return session;
 }
 
 /**
