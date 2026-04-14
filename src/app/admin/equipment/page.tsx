@@ -19,8 +19,15 @@ export default async function AdminEquipmentPage() {
     <div className="p-6 max-w-7xl mx-auto">
       <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
-          <Link href="/dashboard" className="text-sm text-sfrs-red hover:underline mb-1 inline-block">← Back to Dashboard</Link>
-          <h1 className="text-3xl font-bold text-slate-900 leading-tight">Manage Equipment</h1>
+          <Link
+            href="/dashboard"
+            className="text-sm text-sfrs-red hover:underline mb-1 inline-block"
+          >
+            ← Back to Dashboard
+          </Link>
+          <h1 className="text-3xl font-bold text-slate-900 leading-tight">
+            Manage Equipment
+          </h1>
         </div>
         <div className="flex flex-wrap gap-2">
           <Link
@@ -53,18 +60,28 @@ export default async function AdminEquipmentPage() {
       <div className="bg-white shadow-sm border border-slate-200 rounded-lg overflow-hidden">
         <ul className="divide-y divide-slate-100">
           {equipment.length === 0 ? (
-            <li className="px-6 py-12 text-center text-slate-500">No equipment found.</li>
+            <li className="px-6 py-12 text-center text-slate-500">
+              No equipment found.
+            </li>
           ) : (
             equipment.map((item) => (
               <li key={item.id} className="hover:bg-slate-50 transition-colors">
                 <div className="px-6 py-4 flex items-center justify-between">
                   <div className="flex flex-col min-w-0">
-                    <span className="text-xs font-bold text-sfrs-red uppercase tracking-wider">{item.externalId}</span>
-                    <span className="text-lg font-bold text-slate-900 truncate">{item.name}</span>
-                    <span className="text-xs text-slate-500">{item.location} • {item.category}</span>
+                    <span className="text-xs font-bold text-sfrs-red uppercase tracking-wider">
+                      {item.externalId}
+                    </span>
+                    <span className="text-lg font-bold text-slate-900 truncate">
+                      {item.name}
+                    </span>
+                    <span className="text-xs text-slate-500">
+                      {item.location} • {item.category}
+                    </span>
                   </div>
                   <div className="flex items-center space-x-4 ml-4">
-                    <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${item.status === "ON_RUN" ? "bg-sfrs-green/10 text-sfrs-green" : "bg-sfrs-red/10 text-sfrs-red"}`}>
+                    <span
+                      className={`px-2 py-0.5 text-xs font-bold rounded-full ${item.status === "ON_RUN" ? "bg-sfrs-green/10 text-sfrs-green" : "bg-sfrs-red/10 text-sfrs-red"}`}
+                    >
                       {item.status}
                     </span>
                     <Link

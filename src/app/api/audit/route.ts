@@ -28,17 +28,17 @@ export async function GET(req: Request) {
       where,
       include: {
         equipment: {
-          select: { externalId: true, name: true }
+          select: { externalId: true, name: true },
         },
         user: {
-          select: { username: true }
-        }
+          select: { username: true },
+        },
       },
       orderBy: { timestamp: "desc" },
       take: limit,
       skip: skip,
     }),
-    prisma.testLog.count({ where })
+    prisma.testLog.count({ where }),
   ]);
 
   return NextResponse.json({
@@ -47,8 +47,8 @@ export async function GET(req: Request) {
       total,
       page,
       limit,
-      totalPages: Math.ceil(total / limit)
-    }
+      totalPages: Math.ceil(total / limit),
+    },
   });
 }
 
@@ -67,7 +67,7 @@ export async function DELETE(req: Request) {
       // 1. Get the log to be deleted
       const log = await tx.testLog.findUnique({
         where: { id },
-        include: { equipment: true }
+        include: { equipment: true },
       });
 
       if (!log) {
@@ -76,7 +76,7 @@ export async function DELETE(req: Request) {
 
       // 2. Perform irreversible (hard) delete
       await tx.testLog.delete({
-        where: { id }
+        where: { id },
       });
 
       // 3. Record the audit event
@@ -90,9 +90,9 @@ export async function DELETE(req: Request) {
             equipmentId: log.equipmentId,
             type: log.type,
             result: log.result,
-            timestamp: log.timestamp
-          })
-        }
+            timestamp: log.timestamp,
+          }),
+        },
       });
 
       // 4. OTR Reversion Logic
@@ -102,13 +102,13 @@ export async function DELETE(req: Request) {
           where: {
             equipmentId: log.equipmentId,
             result: "FAIL",
-          }
+          },
         });
 
         if (remainingFails === 0) {
           await tx.equipment.update({
             where: { id: log.equipmentId },
-            data: { status: "ON_RUN" }
+            data: { status: "ON_RUN" },
           });
         }
       }
@@ -119,10 +119,14 @@ export async function DELETE(req: Request) {
     return NextResponse.json(result);
   } catch (error: unknown) {
     if (error instanceof Error && error.message === "LOG_NOT_FOUND") {
-      return NextResponse.json({ error: "Log entry not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Log entry not found" },
+        { status: 404 },
+      );
     }
     console.error("Failed to delete log:", error);
-    const message = error instanceof Error ? error.message : "Failed to delete log";
+    const message =
+      error instanceof Error ? error.message : "Failed to delete log";
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

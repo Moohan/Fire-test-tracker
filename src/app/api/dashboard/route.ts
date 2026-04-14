@@ -2,14 +2,17 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { getTestingWindow, getPreviousTestingWindow } from "@/lib/testing-windows";
+import {
+  getTestingWindow,
+  getPreviousTestingWindow,
+} from "@/lib/testing-windows";
 import { Frequency } from "@/types/equipment";
 import {
   differenceInWeeks,
   differenceInMonths,
   differenceInQuarters,
   differenceInYears,
-  startOfYear
+  startOfYear,
 } from "date-fns";
 
 export async function GET() {
@@ -23,10 +26,7 @@ export async function GET() {
 
   const equipment = await prisma.equipment.findMany({
     where: {
-      OR: [
-        { removedAt: null },
-        { removedAt: { gte: yearStart } }
-      ]
+      OR: [{ removedAt: null }, { removedAt: { gte: yearStart } }],
     },
     include: {
       requirements: true,
@@ -38,9 +38,9 @@ export async function GET() {
               username: true,
               fullName: true,
               role: true,
-            }
-          }
-        }
+            },
+          },
+        },
       },
     },
   });
@@ -69,18 +69,27 @@ export async function GET() {
         return logDate >= prevWindow.start && logDate <= prevWindow.end;
       });
 
-      const hasFailInCurrent = logsInCurrent.some((log) => log.result === "FAIL");
+      const hasFailInCurrent = logsInCurrent.some(
+        (log) => log.result === "FAIL",
+      );
 
-      const isSatisfied = (logs: { result: string; type: string }[], type: string) => {
+      const isSatisfied = (
+        logs: { result: string; type: string }[],
+        type: string,
+      ) => {
         if (type === "VISUAL") {
-          return logs.some(log =>
-            log.result === "PASS" &&
-            (log.type === "VISUAL" || log.type === "FUNCTIONAL" || log.type === "ACCEPTANCE")
+          return logs.some(
+            (log) =>
+              log.result === "PASS" &&
+              (log.type === "VISUAL" ||
+                log.type === "FUNCTIONAL" ||
+                log.type === "ACCEPTANCE"),
           );
         } else if (type === "FUNCTIONAL") {
-          return logs.some(log =>
-            log.result === "PASS" &&
-            (log.type === "FUNCTIONAL" || log.type === "ACCEPTANCE")
+          return logs.some(
+            (log) =>
+              log.result === "PASS" &&
+              (log.type === "FUNCTIONAL" || log.type === "ACCEPTANCE"),
           );
         }
         return false;
@@ -102,9 +111,13 @@ export async function GET() {
       }
 
       // Find the most recent relevant test log (regardless of window)
-      const relevantLogs = item.testLogs.filter(log => {
+      const relevantLogs = item.testLogs.filter((log) => {
         if (req.type === "VISUAL") {
-          return log.type === "VISUAL" || log.type === "FUNCTIONAL" || log.type === "ACCEPTANCE";
+          return (
+            log.type === "VISUAL" ||
+            log.type === "FUNCTIONAL" ||
+            log.type === "ACCEPTANCE"
+          );
         } else if (req.type === "FUNCTIONAL") {
           return log.type === "FUNCTIONAL" || log.type === "ACCEPTANCE";
         }
@@ -154,12 +167,15 @@ export async function GET() {
         satisfied: currentSatisfied,
         hasFail: hasFailInCurrent,
         windowId: currentWindow.id,
-        lastTest: (status === "PASSED" || status === "FAILED") ? {
-          timestamp: lastTest?.timestamp,
-          user: lastTest?.user,
-          result: lastTest?.result
-        } : null,
-        overdueLabel
+        lastTest:
+          status === "PASSED" || status === "FAILED"
+            ? {
+                timestamp: lastTest?.timestamp,
+                user: lastTest?.user,
+                result: lastTest?.result,
+              }
+            : null,
+        overdueLabel,
       };
     });
 

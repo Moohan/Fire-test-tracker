@@ -15,7 +15,10 @@ export async function GET(req: Request) {
   const ids = searchParams.get("ids")?.split(",");
 
   if (!start || !end) {
-    return NextResponse.json({ error: "Start and end dates are required" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Start and end dates are required" },
+      { status: 400 },
+    );
   }
 
   const logs = await prisma.testLog.findMany({
@@ -33,8 +36,8 @@ export async function GET(req: Request) {
           username: true,
           fullName: true,
           role: true,
-        }
-      }
+        },
+      },
     },
     orderBy: {
       timestamp: "asc",

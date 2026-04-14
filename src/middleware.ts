@@ -5,14 +5,13 @@ export default withAuth(
   function middleware(req) {
     const token = req.nextauth.token;
     const path = req.nextUrl.pathname;
+    const roles = ["ADMIN", "WC", "CC"];
 
-    // Role-based protection
-    if (path.startsWith("/admin") && token?.role !== "ADMIN" && token?.role !== "WC" && token?.role !== "CC") {
-      return NextResponse.redirect(new URL("/dashboard", req.url));
-    }
-
-    if (path.startsWith("/reports") && token?.role !== "ADMIN" && token?.role !== "WC" && token?.role !== "CC") {
-      return NextResponse.redirect(new URL("/dashboard", req.url));
+    // Role-based protection for admin and reports
+    if (path.startsWith("/admin") || path.startsWith("/reports")) {
+      if (!roles.includes(token?.role as string)) {
+        return NextResponse.redirect(new URL("/dashboard", req.url));
+      }
     }
 
     return NextResponse.next();
@@ -21,9 +20,17 @@ export default withAuth(
     callbacks: {
       authorized: ({ token }) => !!token,
     },
-  }
+    pages: {
+      signIn: "/login",
+    },
+  },
 );
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/admin/:path*", "/log/:path*", "/reports/:path*"],
+  matcher: [
+    "/dashboard/:path*",
+    "/admin/:path*",
+    "/log/:path*",
+    "/reports/:path*",
+  ],
 };

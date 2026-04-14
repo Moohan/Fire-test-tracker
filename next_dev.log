@@ -1,12 +1,1 @@
 
-> sfrs-ett@0.1.0 dev
-> next dev --webpack
-
-▲ Next.js 16.2.2 (webpack)
-- Local:         http://localhost:3000
-- Network:       http://192.168.0.2:3000
-- Environments: .env
-✓ Ready in 604ms
- ○ (pwa) PWA support is disabled.
-⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
-

@@ -10,12 +10,17 @@ type ActionState = {
   error?: string;
 };
 
-async function createUserAction(prevState: ActionState | null, formData: FormData): Promise<ActionState> {
+async function createUserAction(
+  prevState: ActionState | null,
+  formData: FormData,
+): Promise<ActionState> {
   try {
     await createUser(formData);
     return { success: true };
   } catch (err) {
-    return { error: err instanceof Error ? err.message : "Failed to create user" };
+    return {
+      error: err instanceof Error ? err.message : "Failed to create user",
+    };
   }
 }
 

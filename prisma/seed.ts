@@ -5,7 +5,10 @@ const prisma = new PrismaClient();
 
 async function main() {
   // Only seed in development or if explicitly allowed via ALLOW_PRODUCTION_SEED
-  if (process.env.NODE_ENV === "production" && process.env.ALLOW_PRODUCTION_SEED !== "true") {
+  if (
+    process.env.NODE_ENV === "production" &&
+    process.env.ALLOW_PRODUCTION_SEED !== "true"
+  ) {
     console.log("Seeding skipped in production environment.");
     return;
   }
@@ -14,7 +17,9 @@ async function main() {
 
   if (!adminPassword) {
     if (process.env.NODE_ENV === "production") {
-      throw new Error("ADMIN_PASSWORD environment variable MUST be set for production seeding.");
+      throw new Error(
+        "ADMIN_PASSWORD environment variable MUST be set for production seeding.",
+      );
     }
     console.warn("ADMIN_PASSWORD not set, using default password.");
   }
@@ -25,25 +30,45 @@ async function main() {
   await prisma.user.upsert({
     where: { username: "admin" },
     update: { fullName: "System Administrator", role: "ADMIN" },
-    create: { username: "admin", fullName: "System Administrator", passwordHash, role: "ADMIN" },
+    create: {
+      username: "admin",
+      fullName: "System Administrator",
+      passwordHash,
+      role: "ADMIN",
+    },
   });
 
   await prisma.user.upsert({
     where: { username: "wc_jones" },
     update: { fullName: "WC Jones", role: "WC" },
-    create: { username: "wc_jones", fullName: "WC Jones", passwordHash, role: "WC" },
+    create: {
+      username: "wc_jones",
+      fullName: "WC Jones",
+      passwordHash,
+      role: "WC",
+    },
   });
 
   await prisma.user.upsert({
     where: { username: "cc_smith" },
     update: { fullName: "CC Smith", role: "CC" },
-    create: { username: "cc_smith", fullName: "CC Smith", passwordHash, role: "CC" },
+    create: {
+      username: "cc_smith",
+      fullName: "CC Smith",
+      passwordHash,
+      role: "CC",
+    },
   });
 
   await prisma.user.upsert({
     where: { username: "ff_hayes" },
     update: { fullName: "FF Hayes", role: "FF" },
-    create: { username: "ff_hayes", fullName: "FF Hayes", passwordHash, role: "FF" },
+    create: {
+      username: "ff_hayes",
+      fullName: "FF Hayes",
+      passwordHash,
+      role: "FF",
+    },
   });
 
   // Equipment
@@ -59,10 +84,10 @@ async function main() {
       requirements: {
         create: [
           { frequency: "WEEKLY", type: "VISUAL" },
-          { frequency: "MONTHLY", type: "FUNCTIONAL" }
-        ]
-      }
-    }
+          { frequency: "MONTHLY", type: "FUNCTIONAL" },
+        ],
+      },
+    },
   });
 
   console.log("Seeding complete.");

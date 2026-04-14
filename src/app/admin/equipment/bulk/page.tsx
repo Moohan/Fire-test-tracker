@@ -12,24 +12,45 @@ export default async function BulkUploadPage() {
   }
 
   return (
-    <div className="p-6 max-w-2xl mx-auto">
+    <div className="p-6 max-w-4xl mx-auto">
       <header className="mb-6">
-        <Link href="/admin/equipment" className="text-sm text-sfrs-red hover:underline mb-1 inline-block">← Back to Admin</Link>
-        <h1 className="text-3xl font-bold text-slate-900 leading-tight">Bulk Upload Equipment</h1>
+        <Link
+          href="/admin/equipment"
+          className="text-sm text-sfrs-red hover:underline mb-1 inline-block"
+        >
+          ← Back to Admin
+        </Link>
+        <h1 className="text-3xl font-bold text-slate-900 leading-tight">
+          Bulk Upload Equipment
+        </h1>
+        <p className="text-slate-500 mt-1">
+          Upload a CSV file to add multiple pieces of equipment at once.
+        </p>
       </header>
 
-      <div className="bg-white shadow-sm border border-slate-200 rounded-lg p-6 space-y-6">
-        <div className="p-4 bg-slate-50 rounded-md border border-slate-200 text-sm text-slate-700 leading-relaxed">
-          <p className="font-bold mb-2 uppercase tracking-wider">CSV Format Guide:</p>
-          <ul className="list-disc ml-5 space-y-1">
-            <li><span className="font-bold">Required Columns:</span> Equipment_ID, Name, Location, Category</li>
-            <li><span className="font-bold">Optional Columns:</span> SFRS_ID, Manufacturer_ID</li>
-            <li><span className="font-bold">Test Frequency Columns:</span> Weekly_Test_Type, Monthly_Test_Type, Quarterly_Test_Type, Annual_Test_Type</li>
-            <li><span className="font-bold">Test Type Values:</span> None, Visual, Functional</li>
-          </ul>
-        </div>
-
+      <div className="bg-white shadow-sm border border-slate-200 rounded-lg p-6">
         <BulkUploadForm />
+      </div>
+
+      <div className="mt-8 bg-slate-50 rounded-lg p-6 border border-slate-200">
+        <h2 className="text-lg font-bold text-slate-900 mb-2">
+          CSV Format Requirements
+        </h2>
+        <p className="text-sm text-slate-600 mb-4">
+          Your CSV should include the following columns:
+        </p>
+        <ul className="list-disc list-inside text-sm text-slate-600 space-y-1 font-mono bg-white p-4 rounded border">
+          <li>externalId (Required, Unique)</li>
+          <li>name (Required)</li>
+          <li>location (Required)</li>
+          <li>category (Required)</li>
+          <li>sfrsId (Optional)</li>
+          <li>mfrId (Optional)</li>
+          <li>req_WEEKLY (Optional: VISUAL/FUNCTIONAL)</li>
+          <li>req_MONTHLY (Optional: VISUAL/FUNCTIONAL)</li>
+          <li>req_QUARTERLY (Optional: VISUAL/FUNCTIONAL)</li>
+          <li>req_ANNUAL (Optional: VISUAL/FUNCTIONAL)</li>
+        </ul>
       </div>
     </div>
   );

@@ -34,6 +34,7 @@ async function ensureAdmin() {
   if (!session || !["ADMIN", "WC", "CC"].includes(session.user.role)) {
     throw new Error("Unauthorized");
   }
+  return session;
 }
 
 /**
@@ -42,7 +43,9 @@ async function ensureAdmin() {
  */
 function getNormalizedProcedurePath(procedurePath: string): string {
   // Remove leading slashes to ensure it's relative when joined
-  const normalized = procedurePath.startsWith("/") ? procedurePath.slice(1) : procedurePath;
+  const normalized = procedurePath.startsWith("/")
+    ? procedurePath.slice(1)
+    : procedurePath;
   return normalized;
 }
 
@@ -67,7 +70,19 @@ export async function saveEquipment(formData: FormData, id?: string) {
     throw new Error(validatedFields.error.issues[0].message);
   }
 
-  const { externalId, name, location, category, status, sfrsId, mfrId, expiryDate, statutoryExamination, removedAt, trackHours } = validatedFields.data;
+  const {
+    externalId,
+    name,
+    location,
+    category,
+    status,
+    sfrsId,
+    mfrId,
+    expiryDate,
+    statutoryExamination,
+    removedAt,
+    trackHours,
+  } = validatedFields.data;
   const procedureFile = formData.get("procedureFile") as File;
 
   let procedurePath = (formData.get("currentProcedurePath") as string) || null;
@@ -105,11 +120,20 @@ export async function saveEquipment(formData: FormData, id?: string) {
 
       const validatedReq = RequirementSchema.safeParse({ frequency: f, type });
       if (!validatedReq.success) {
-        throw new Error(`Invalid requirement for ${f}: ${validatedReq.error.issues[0].message}`);
+        throw new Error(
+          `Invalid requirement for ${f}: ${validatedReq.error.issues[0].message}`,
+        );
       }
       return validatedReq.data;
     })
-    .filter((r): r is { frequency: "WEEKLY" | "MONTHLY" | "QUARTERLY" | "ANNUAL"; type: "VISUAL" | "FUNCTIONAL" } => r !== null);
+    .filter(
+      (
+        r,
+      ): r is {
+        frequency: "WEEKLY" | "MONTHLY" | "QUARTERLY" | "ANNUAL";
+        type: "VISUAL" | "FUNCTIONAL";
+      } => r !== null,
+    );
 
   const data = {
     externalId,
@@ -144,7 +168,10 @@ export async function saveEquipment(formData: FormData, id?: string) {
       });
     }
   } catch (error: unknown) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    ) {
       const target = (error.meta?.target as string[]) || [];
       if (target.includes("externalId")) {
         throw new Error("Equipment ID already exists.");
@@ -171,7 +198,9 @@ export async function deleteEquipment(id: string) {
 
   if (equipment?.procedurePath) {
     try {
-      const normalizedPath = getNormalizedProcedurePath(equipment.procedurePath);
+      const normalizedPath = getNormalizedProcedurePath(
+        equipment.procedurePath,
+      );
       await unlink(path.join(process.cwd(), "public", normalizedPath));
     } catch (e) {
       console.warn("Failed to delete procedure file:", e);

@@ -19,12 +19,16 @@ export default function EquipmentForm({ initialData }: EquipmentFormProps) {
         return e instanceof Error ? e.message : String(e);
       }
     },
-    null
+    null,
   );
 
   const handleDelete = async () => {
     if (!initialData?.id) return;
-    if (!confirm("Are you sure you want to delete this equipment? This action cannot be undone.")) {
+    if (
+      !confirm(
+        "Are you sure you want to delete this equipment? This action cannot be undone.",
+      )
+    ) {
       return;
     }
 
@@ -195,7 +199,11 @@ export default function EquipmentForm({ initialData }: EquipmentFormProps) {
               type="date"
               name="expiryDate"
               id="expiryDate"
-              defaultValue={initialData?.expiryDate ? new Date(initialData.expiryDate).toISOString().split('T')[0] : ""}
+              defaultValue={
+                initialData?.expiryDate
+                  ? new Date(initialData.expiryDate).toISOString().split("T")[0]
+                  : ""
+              }
               className="mt-1 block w-full border border-slate-300 rounded-md shadow-sm p-3 min-h-[44px]"
             />
           </div>
@@ -228,7 +236,11 @@ export default function EquipmentForm({ initialData }: EquipmentFormProps) {
               type="date"
               name="removedAt"
               id="removedAt"
-              defaultValue={initialData?.removedAt ? new Date(initialData.removedAt).toISOString().split('T')[0] : ""}
+              defaultValue={
+                initialData?.removedAt
+                  ? new Date(initialData.removedAt).toISOString().split("T")[0]
+                  : ""
+              }
               className="mt-1 block w-full border border-slate-300 rounded-md shadow-sm p-3 min-h-[44px]"
             />
           </div>
@@ -274,7 +286,7 @@ export default function EquipmentForm({ initialData }: EquipmentFormProps) {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
             {frequencies.map((freq) => {
               const req = initialData?.requirements?.find(
-                (r) => r.frequency === freq
+                (r) => r.frequency === freq,
               );
               return (
                 <div key={freq}>

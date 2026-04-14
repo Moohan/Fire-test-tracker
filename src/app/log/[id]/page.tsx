@@ -53,11 +53,11 @@ export default function LogTestPage() {
     setIsOffline(!navigator.onLine);
     const handleOnline = () => setIsOffline(false);
     const handleOffline = () => setIsOffline(true);
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
     return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
     };
   }, []);
 
@@ -70,11 +70,17 @@ export default function LogTestPage() {
     },
   });
 
-  const canMarkRemoved = session?.user?.role && ["ADMIN", "WC", "CC"].includes(session.user.role);
+  const canMarkRemoved =
+    session?.user?.role && ["ADMIN", "WC", "CC"].includes(session.user.role);
 
   const handleMarkRemoved = async () => {
     if (!item || !canMarkRemoved) return;
-    if (!confirm("Are you sure you want to mark this equipment as removed from service?")) return;
+    if (
+      !confirm(
+        "Are you sure you want to mark this equipment as removed from service?",
+      )
+    )
+      return;
 
     setIsSubmitting(true);
     try {
@@ -84,7 +90,7 @@ export default function LogTestPage() {
       formData.append("location", item.location);
       formData.append("category", item.category);
       formData.append("status", "OFF_RUN");
-      formData.append("removedAt", new Date().toISOString().split('T')[0]);
+      formData.append("removedAt", new Date().toISOString().split("T")[0]);
 
       const res = await fetch(`/api/equipment/${id}`, {
         method: "PUT",
@@ -93,7 +99,9 @@ export default function LogTestPage() {
 
       if (!res.ok) throw new Error("Failed to mark equipment as removed");
 
-      await queryClient.invalidateQueries({ queryKey: ["equipment-dashboard"] });
+      await queryClient.invalidateQueries({
+        queryKey: ["equipment-dashboard"],
+      });
       router.push("/dashboard");
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
@@ -106,17 +114,17 @@ export default function LogTestPage() {
     setIsSubmitting(true);
     setError(null);
 
-    const selectedTest = TEST_CODES.find(t => t.code === testCode);
+    const selectedTest = TEST_CODES.find((t) => t.code === testCode);
 
     // Determine type based on requirements if possible, fallback to default
     let finalType: string = selectedTest?.type || "VISUAL";
 
     if (item?.requirements) {
       const freqMapping: Record<string, string> = {
-        "W": "WEEKLY",
-        "M": "MONTHLY",
-        "Q": "QUARTERLY",
-        "12": "ANNUAL"
+        W: "WEEKLY",
+        M: "MONTHLY",
+        Q: "QUARTERLY",
+        "12": "ANNUAL",
       };
       const freq = freqMapping[testCode];
       if (freq) {
@@ -158,18 +166,19 @@ export default function LogTestPage() {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["equipment-dashboard"] }),
         queryClient.invalidateQueries({ queryKey: ["audit-logs"] }),
-        queryClient.invalidateQueries({ queryKey: ["equipment-item", id] })
+        queryClient.invalidateQueries({ queryKey: ["equipment-item", id] }),
       ]);
 
       router.push("/dashboard");
     } catch (err) {
       const isNetworkError =
         err instanceof TypeError ||
-        (err instanceof Error && (err.message.includes("fetch") || err.message.includes("network")));
+        (err instanceof Error &&
+          (err.message.includes("fetch") || err.message.includes("network")));
 
       if (isNetworkError || !navigator.onLine) {
-         await db.pendingLogs.add(payload);
-         router.push("/dashboard?queued=true");
+        await db.pendingLogs.add(payload);
+        router.push("/dashboard?queued=true");
       } else {
         setError((err as Error).message);
         setIsSubmitting(false);
@@ -178,7 +187,10 @@ export default function LogTestPage() {
   };
 
   if (isLoading) return <div className="p-6 text-center">Loading...</div>;
-  if (!item) return <div className="p-6 text-center text-sfrs-red">Equipment not found</div>;
+  if (!item)
+    return (
+      <div className="p-6 text-center text-sfrs-red">Equipment not found</div>
+    );
 
   return (
     <div className="flex flex-col min-h-screen bg-slate-50">
@@ -192,8 +204,12 @@ export default function LogTestPage() {
             <span aria-hidden="true">←</span>
           </Link>
           <div className="min-w-0">
-            <h1 className="text-xl font-bold text-slate-900 leading-none truncate">Record Test</h1>
-            <p className="text-sm text-slate-500 leading-none mt-1 truncate">{item.name} ({item.externalId})</p>
+            <h1 className="text-xl font-bold text-slate-900 leading-none truncate">
+              Record Test
+            </h1>
+            <p className="text-sm text-slate-500 leading-none mt-1 truncate">
+              {item.name} ({item.externalId})
+            </p>
           </div>
         </div>
         <div className="flex space-x-2">
@@ -221,12 +237,15 @@ export default function LogTestPage() {
 
             {isOffline && (
               <div className="p-3 bg-sfrs-amber/10 text-sfrs-amber border border-sfrs-amber/20 rounded-md text-sm">
-                You are currently offline. Your test will be queued and synced when you reconnect.
+                You are currently offline. Your test will be queued and synced
+                when you reconnect.
               </div>
             )}
 
             <div>
-              <label className="block text-sm font-bold text-slate-700 uppercase tracking-wider mb-2">Test Code</label>
+              <label className="block text-sm font-bold text-slate-700 uppercase tracking-wider mb-2">
+                Test Code
+              </label>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 {TEST_CODES.map((t) => (
                   <button
@@ -240,14 +259,18 @@ export default function LogTestPage() {
                     }`}
                   >
                     <span className="text-base">{t.code}</span>
-                    <span className="opacity-70 text-[10px] uppercase tracking-tighter text-center leading-tight">{t.name}</span>
+                    <span className="opacity-70 text-[10px] uppercase tracking-tighter text-center leading-tight">
+                      {t.name}
+                    </span>
                   </button>
                 ))}
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-slate-700 uppercase tracking-wider mb-2">Result</label>
+              <label className="block text-sm font-bold text-slate-700 uppercase tracking-wider mb-2">
+                Result
+              </label>
               <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
@@ -258,7 +281,10 @@ export default function LogTestPage() {
                       : "bg-white border-slate-300 text-slate-700 hover:bg-slate-50"
                   }`}
                 >
-                  <span className="mr-2" aria-hidden="true">✓</span> PASS
+                  <span className="mr-2" aria-hidden="true">
+                    ✓
+                  </span>{" "}
+                  PASS
                 </button>
                 <button
                   type="button"
@@ -269,14 +295,20 @@ export default function LogTestPage() {
                       : "bg-white border-slate-300 text-slate-700 hover:bg-slate-50"
                   }`}
                 >
-                  <span className="mr-2" aria-hidden="true">✗</span> FAIL
+                  <span className="mr-2" aria-hidden="true">
+                    ✗
+                  </span>{" "}
+                  FAIL
                 </button>
               </div>
             </div>
 
             {item.trackHours && (
               <div>
-                <label htmlFor="hoursUsed" className="block text-sm font-bold text-slate-700 uppercase tracking-wider mb-2">
+                <label
+                  htmlFor="hoursUsed"
+                  className="block text-sm font-bold text-slate-700 uppercase tracking-wider mb-2"
+                >
                   Actions/Hours Used (15 min increments)
                 </label>
                 <input
@@ -291,7 +323,12 @@ export default function LogTestPage() {
             )}
 
             <div>
-              <label htmlFor="notes" className="block text-sm font-bold text-slate-700 uppercase tracking-wider mb-2">Notes (Optional)</label>
+              <label
+                htmlFor="notes"
+                className="block text-sm font-bold text-slate-700 uppercase tracking-wider mb-2"
+              >
+                Notes (Optional)
+              </label>
               <textarea
                 id="notes"
                 rows={3}
@@ -308,7 +345,11 @@ export default function LogTestPage() {
                 disabled={isSubmitting}
                 className="w-full bg-sfrs-red text-white font-bold py-5 px-6 rounded-md shadow-lg hover:bg-sfrs-red/90 active:scale-[0.98] transition-all disabled:opacity-50 disabled:active:scale-100 min-h-[56px]"
               >
-                {isSubmitting ? "Processing..." : isOffline ? "Queue Test Result" : "Confirm Result"}
+                {isSubmitting
+                  ? "Processing..."
+                  : isOffline
+                    ? "Queue Test Result"
+                    : "Confirm Result"}
               </button>
 
               {!item.removedAt && canMarkRemoved && (

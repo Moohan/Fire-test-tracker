@@ -25,10 +25,14 @@ export async function POST(req: Request) {
     const validated = LogSchema.safeParse(body);
 
     if (!validated.success) {
-      return NextResponse.json({ error: "Invalid request body", details: validated.error.format() }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid request body", details: validated.error.format() },
+        { status: 400 },
+      );
     }
 
-    const { equipmentId, type, testCode, result, hoursUsed, notes, timestamp } = validated.data;
+    const { equipmentId, type, testCode, result, hoursUsed, notes, timestamp } =
+      validated.data;
 
     const result_log = await prisma.$transaction(async (tx) => {
       // 1. Fetch equipment status inside the transaction to prevent race conditions
@@ -76,9 +80,15 @@ export async function POST(req: Request) {
     return NextResponse.json(result_log, { status: 201 });
   } catch (error: unknown) {
     if (error instanceof Error && error.message === "EQUIPMENT_NOT_FOUND") {
-      return NextResponse.json({ error: "Equipment not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Equipment not found" },
+        { status: 404 },
+      );
     }
     console.error("Failed to log test:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 },
+    );
   }
 }
