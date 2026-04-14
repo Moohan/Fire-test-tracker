@@ -9,7 +9,7 @@ import Link from "next/link";
 interface AuditLog {
   id: string;
   equipmentId: string;
-  timestamp: string;
+  timestamp: string | Date;
   type: string;
   result: string;
   notes: string | null;
@@ -19,6 +19,7 @@ interface AuditLog {
   };
   user: {
     username: string;
+    fullName: string | null;
   };
 }
 
@@ -34,52 +35,78 @@ interface AuditResponse {
 
 interface MetadataResponse {
   equipment: { id: string; externalId: string; name: string }[];
-  users: { id: string; username: string }[];
+  users: { id: string; username: string; fullName: string | null }[];
 }
 
-export default function AuditPageClient() {
+interface AuditPageClientProps {
+  initialLogs: any[];
+  equipment: { id: string; externalId: string; name: string }[];
+  users: { id: string; username: string; fullName: string | null }[];
+}
+
+export default function AuditPageClient({ initialLogs, equipment, users }: AuditPageClientProps) {
   const queryClient = useQueryClient();
   const [filterResult, setFilterResult] = useState<string>("");
   const [filterEquipment, setFilterEquipment] = useState<string>("");
   const [filterUser, setFilterUser] = useState<string>("");
   const [page, setPage] = useState(1);
 
+  // Metadata is passed from server but also fetched for freshness if needed,
+  // though we can just use the props.
+  // Using query with initialData for metadata
   const { data: metadata } = useQuery<MetadataResponse>({
     queryKey: ["audit-metadata"],
     queryFn: async () => {
       const res = await fetch("/api/audit/metadata");
       if (!res.ok) throw new Error("Failed to fetch metadata");
       return res.json();
-    }
+    },
+    initialData: { equipment, users },
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
   const { data, isLoading } = useQuery<AuditResponse>({
-    queryKey: ["audit-logs", filterResult, filterEquipment, filterUser, page],
+    queryKey: ["audit-logs", page, filterResult, filterEquipment, filterUser],
     queryFn: async () => {
-      const url = new URL("/api/audit", window.location.origin);
-      if (filterResult) url.searchParams.set("result", filterResult);
-      if (filterEquipment) url.searchParams.set("equipmentId", filterEquipment);
-      if (filterUser) url.searchParams.set("userId", filterUser);
-      url.searchParams.set("page", page.toString());
-      const res = await fetch(url.toString());
-      if (!res.ok) throw new Error("Failed to fetch audit logs");
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: "20",
+      });
+      if (filterResult) params.append("result", filterResult);
+      if (filterEquipment) params.append("equipmentId", filterEquipment);
+      if (filterUser) params.append("userId", filterUser);
+
+      const res = await fetch(`/api/audit/logs?${params.toString()}`);
+      if (!res.ok) throw new Error("Failed to fetch logs");
       return res.json();
-    }
+    },
+    // Only use initialLogs for the first page with no filters
+    initialData: (page === 1 && !filterResult && !filterEquipment && !filterUser)
+      ? {
+          logs: initialLogs,
+          pagination: {
+            total: initialLogs.length,
+            page: 1,
+            limit: 20,
+            totalPages: Math.ceil(initialLogs.length / 20) || 1
+          }
+        }
+      : undefined,
   });
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const res = await fetch(`/api/audit?id=${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/audit/logs/${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Failed to delete log");
       return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["audit-logs"] });
-    }
+    },
   });
 
   const handleDelete = (id: string) => {
-    if (confirm("Are you sure you want to delete this log entry? This action is IRREVERSIBLE and will be recorded in the audit trail.")) {
+    if (confirm("Are you sure you want to delete this log? This action is irreversible and will be logged in the audit trail.")) {
       deleteMutation.mutate(id);
     }
   };
