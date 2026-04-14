@@ -21,6 +21,7 @@ const EquipmentSchema = z.object({
   expiryDate: z.string().optional().nullable(),
   statutoryExamination: z.boolean().default(false),
   removedAt: z.string().optional().nullable(),
+  trackHours: z.boolean().default(false),
 });
 
 const RequirementSchema = z.object({
@@ -59,13 +60,14 @@ export async function saveEquipment(formData: FormData, id?: string) {
     expiryDate: (formData.get("expiryDate") as string) || null,
     statutoryExamination: formData.get("statutoryExamination") === "true",
     removedAt: (formData.get("removedAt") as string) || null,
+    trackHours: formData.get("trackHours") === "true",
   });
 
   if (!validatedFields.success) {
     throw new Error(validatedFields.error.issues[0].message);
   }
 
-  const { externalId, name, location, category, status, sfrsId, mfrId, expiryDate, statutoryExamination, removedAt } = validatedFields.data;
+  const { externalId, name, location, category, status, sfrsId, mfrId, expiryDate, statutoryExamination, removedAt, trackHours } = validatedFields.data;
   const procedureFile = formData.get("procedureFile") as File;
 
   let procedurePath = (formData.get("currentProcedurePath") as string) || null;
@@ -121,6 +123,7 @@ export async function saveEquipment(formData: FormData, id?: string) {
     expiryDate: expiryDate ? new Date(expiryDate) : null,
     statutoryExamination,
     removedAt: removedAt ? new Date(removedAt) : null,
+    trackHours,
     requirements: {
       create: requirementsData,
     },

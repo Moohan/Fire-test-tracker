@@ -167,6 +167,23 @@ export default function EquipmentForm({ initialData }: EquipmentFormProps) {
             </select>
           </div>
 
+          <div className="flex items-center space-x-3 pt-6">
+            <input
+              type="checkbox"
+              name="trackHours"
+              id="trackHours"
+              value="true"
+              defaultChecked={initialData?.trackHours}
+              className="h-5 w-5 text-sfrs-red border-slate-300 rounded"
+            />
+            <label
+              htmlFor="trackHours"
+              className="text-sm font-medium text-slate-700 uppercase tracking-wider"
+            >
+              Track Actions/Hours Used
+            </label>
+          </div>
+
           <div>
             <label
               htmlFor="expiryDate"

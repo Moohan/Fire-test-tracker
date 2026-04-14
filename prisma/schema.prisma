@@ -29,6 +29,7 @@ model Equipment {
   expiryDate           DateTime?
   statutoryExamination Boolean           @default(false)
   removedAt            DateTime?
+  trackHours           Boolean           @default(false)
   testLogs             TestLog[]
   requirements         TestRequirement[]
 }

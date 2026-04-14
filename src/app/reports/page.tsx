@@ -7,6 +7,7 @@ import { format, startOfYear, endOfYear } from "date-fns";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import JSZip from "jszip";
+import Papa from "papaparse";
 
 interface EquipmentListIcon {
   id: string;
@@ -71,7 +72,7 @@ export default function ReportsPage() {
       const logs: LogEntry[] = await res.json();
 
       const headers = ["Date", "Equipment", "SFRS ID", "Test Code", "Result", "Defects/Notes", "Actions/Hours", "Tester"];
-      const rows = logs.map((log) => [
+      const data = logs.map((log) => [
         format(new Date(log.timestamp), "dd/MM/yyyy"),
         log.equipment.name,
         log.equipment.sfrsId || "",
@@ -82,7 +83,12 @@ export default function ReportsPage() {
         log.user.fullName || log.user.username
       ]);
 
-      const csvContent = [headers, ...rows].map(e => e.join(",")).join("\n");
+      // Using PapaParse for robust CSV generation with proper escaping
+      const csvContent = Papa.unparse({
+        fields: headers,
+        data: data
+      });
+
       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
       const link = document.createElement("a");
       const url = URL.createObjectURL(blob);

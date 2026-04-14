@@ -22,5 +22,6 @@ export interface Equipment {
   expiryDate?: Date | string | null;
   statutoryExamination?: boolean;
   removedAt?: Date | string | null;
+  trackHours?: boolean;
   requirements?: EquipmentRequirement[];
 }

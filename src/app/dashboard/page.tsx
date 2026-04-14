@@ -62,9 +62,12 @@ function DashboardContent() {
 
   useEffect(() => {
     if (searchParams.get("queued") === "true") {
-      setTimeout(() => setShowQueuedMessage(true), 0);
-      const timer = setTimeout(() => setShowQueuedMessage(false), 5000);
-      return () => clearTimeout(timer);
+      const showTimer = setTimeout(() => setShowQueuedMessage(true), 0);
+      const hideTimer = setTimeout(() => setShowQueuedMessage(false), 5000);
+      return () => {
+        clearTimeout(showTimer);
+        clearTimeout(hideTimer);
+      };
     }
   }, [searchParams]);
 

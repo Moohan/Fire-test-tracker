@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { db } from "@/lib/db";
+import { useSession } from "next-auth/react";
 
 const TEST_CODES = [
   { code: "A", name: "Acceptance", type: "ACCEPTANCE" },
@@ -30,6 +31,7 @@ interface EquipmentItem {
   category: string;
   procedurePath: string | null;
   removedAt: string | null;
+  trackHours: boolean;
   requirements?: Requirement[];
 }
 
@@ -37,6 +39,7 @@ export default function LogTestPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { data: session } = useSession();
 
   const [testCode, setTestCode] = useState<string>("W");
   const [result, setResult] = useState<"PASS" | "FAIL">("PASS");
@@ -67,8 +70,10 @@ export default function LogTestPage() {
     },
   });
 
+  const canMarkRemoved = session?.user?.role && ["ADMIN", "WC", "CC"].includes(session.user.role);
+
   const handleMarkRemoved = async () => {
-    if (!item) return;
+    if (!item || !canMarkRemoved) return;
     if (!confirm("Are you sure you want to mark this equipment as removed from service?")) return;
 
     setIsSubmitting(true);
@@ -127,7 +132,7 @@ export default function LogTestPage() {
       type: finalType,
       testCode,
       result,
-      hoursUsed,
+      hoursUsed: item?.trackHours ? hoursUsed : undefined,
       notes,
       timestamp: new Date().toISOString(),
     };
@@ -269,19 +274,21 @@ export default function LogTestPage() {
               </div>
             </div>
 
-            <div>
-              <label htmlFor="hoursUsed" className="block text-sm font-bold text-slate-700 uppercase tracking-wider mb-2">
-                Actions/Hours Used (15 min increments)
-              </label>
-              <input
-                id="hoursUsed"
-                type="text"
-                value={hoursUsed}
-                onChange={(e) => setHoursUsed(e.target.value)}
-                placeholder="e.g. 0.25, 1.5, or 'Cleaned valve'"
-                className="w-full border border-slate-300 rounded-md p-3 text-slate-900 focus:ring-sfrs-red focus:border-sfrs-red min-h-[44px]"
-              />
-            </div>
+            {item.trackHours && (
+              <div>
+                <label htmlFor="hoursUsed" className="block text-sm font-bold text-slate-700 uppercase tracking-wider mb-2">
+                  Actions/Hours Used (15 min increments)
+                </label>
+                <input
+                  id="hoursUsed"
+                  type="text"
+                  value={hoursUsed}
+                  onChange={(e) => setHoursUsed(e.target.value)}
+                  placeholder="e.g. 0.25, 1.5, or 'Cleaned valve'"
+                  className="w-full border border-slate-300 rounded-md p-3 text-slate-900 focus:ring-sfrs-red focus:border-sfrs-red min-h-[44px]"
+                />
+              </div>
+            )}
 
             <div>
               <label htmlFor="notes" className="block text-sm font-bold text-slate-700 uppercase tracking-wider mb-2">Notes (Optional)</label>
@@ -304,7 +311,7 @@ export default function LogTestPage() {
                 {isSubmitting ? "Processing..." : isOffline ? "Queue Test Result" : "Confirm Result"}
               </button>
 
-              {!item.removedAt && (
+              {!item.removedAt && canMarkRemoved && (
                 <button
                   type="button"
                   onClick={handleMarkRemoved}

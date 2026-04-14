@@ -33,7 +33,9 @@ export async function PUT(
 ) {
   const { id } = await params;
   const session = await getServerSession(authOptions);
-  if (!session) {
+
+  // Security Fix: Enforce role-based authorization for updates
+  if (!session || !["ADMIN", "WC", "CC"].includes(session.user.role)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -46,6 +48,7 @@ export async function PUT(
       category?: string;
       status?: "ON_RUN" | "OFF_RUN";
       removedAt?: Date | null;
+      trackHours?: boolean;
     } = {};
 
     if (formData.has("externalId")) data.externalId = formData.get("externalId") as string;
@@ -53,6 +56,7 @@ export async function PUT(
     if (formData.has("location")) data.location = formData.get("location") as string;
     if (formData.has("category")) data.category = formData.get("category") as string;
     if (formData.has("status")) data.status = formData.get("status") as "ON_RUN" | "OFF_RUN";
+    if (formData.has("trackHours")) data.trackHours = formData.get("trackHours") === "true";
     if (formData.has("removedAt")) {
       const val = formData.get("removedAt");
       data.removedAt = val ? new Date(val as string) : null;
