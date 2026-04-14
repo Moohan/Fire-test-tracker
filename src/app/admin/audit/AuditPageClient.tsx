@@ -39,7 +39,7 @@ interface MetadataResponse {
 }
 
 interface AuditPageClientProps {
-  initialLogs: any[];
+  initialLogs: AuditLog[];
   equipment: { id: string; externalId: string; name: string }[];
   users: { id: string; username: string; fullName: string | null }[];
 }
