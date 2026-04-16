@@ -45,3 +45,6 @@ next-env.d.ts
 # Environment artifacts
 dev_server.log
 .desloppify/
+
+
+next_dev.log

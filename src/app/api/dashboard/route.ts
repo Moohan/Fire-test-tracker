@@ -2,13 +2,17 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { getTestingWindow, getPreviousTestingWindow } from "@/lib/testing-windows";
+import {
+  getTestingWindow,
+  getPreviousTestingWindow,
+} from "@/lib/testing-windows";
 import { Frequency } from "@/types/equipment";
 import {
   differenceInWeeks,
   differenceInMonths,
   differenceInQuarters,
-  differenceInYears
+  differenceInYears,
+  startOfYear,
 } from "date-fns";
 
 export async function GET() {
@@ -17,7 +21,13 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const now = new Date();
+  const yearStart = startOfYear(now);
+
   const equipment = await prisma.equipment.findMany({
+    where: {
+      OR: [{ removedAt: null }, { removedAt: { gte: yearStart } }],
+    },
     include: {
       requirements: true,
       testLogs: {
@@ -28,16 +38,22 @@ export async function GET() {
               username: true,
               fullName: true,
               role: true,
-            }
-          }
-        }
+            },
+          },
+        },
       },
     },
   });
 
-  const now = new Date();
-
   const dashboardData = equipment.map((item) => {
+    // If equipment is removed, it doesn't need compliance checking
+    if (item.removedAt) {
+      return {
+        ...item,
+        compliance: [],
+      };
+    }
+
     const compliance = item.requirements.map((req) => {
       const freq = req.frequency as Frequency;
       const currentWindow = getTestingWindow(freq, now);
@@ -53,18 +69,27 @@ export async function GET() {
         return logDate >= prevWindow.start && logDate <= prevWindow.end;
       });
 
-      const hasFailInCurrent = logsInCurrent.some((log) => log.result === "FAIL");
+      const hasFailInCurrent = logsInCurrent.some(
+        (log) => log.result === "FAIL",
+      );
 
-      const isSatisfied = (logs: { result: string; type: string }[], type: string) => {
+      const isSatisfied = (
+        logs: { result: string; type: string }[],
+        type: string,
+      ) => {
         if (type === "VISUAL") {
-          return logs.some(log =>
-            log.result === "PASS" &&
-            (log.type === "VISUAL" || log.type === "FUNCTIONAL" || log.type === "ACCEPTANCE")
+          return logs.some(
+            (log) =>
+              log.result === "PASS" &&
+              (log.type === "VISUAL" ||
+                log.type === "FUNCTIONAL" ||
+                log.type === "ACCEPTANCE"),
           );
         } else if (type === "FUNCTIONAL") {
-          return logs.some(log =>
-            log.result === "PASS" &&
-            (log.type === "FUNCTIONAL" || log.type === "ACCEPTANCE")
+          return logs.some(
+            (log) =>
+              log.result === "PASS" &&
+              (log.type === "FUNCTIONAL" || log.type === "ACCEPTANCE"),
           );
         }
         return false;
@@ -86,9 +111,13 @@ export async function GET() {
       }
 
       // Find the most recent relevant test log (regardless of window)
-      const relevantLogs = item.testLogs.filter(log => {
+      const relevantLogs = item.testLogs.filter((log) => {
         if (req.type === "VISUAL") {
-          return log.type === "VISUAL" || log.type === "FUNCTIONAL" || log.type === "ACCEPTANCE";
+          return (
+            log.type === "VISUAL" ||
+            log.type === "FUNCTIONAL" ||
+            log.type === "ACCEPTANCE"
+          );
         } else if (req.type === "FUNCTIONAL") {
           return log.type === "FUNCTIONAL" || log.type === "ACCEPTANCE";
         }
@@ -125,10 +154,6 @@ export async function GET() {
         if (diff > 0) {
           overdueLabel = `last test ${diff} ${unit} ago`;
         } else {
-          // If diff is 0 but it's overdue, it means it was in the current window but maybe failed?
-          // No, OVERDUE means not passed in current and not passed in prev.
-          // If it was tested today but failed, status would be FAILED.
-          // So if it's OVERDUE, the last test must be at least from previous window or older.
           overdueLabel = "last test < 1 unit ago";
         }
       } else if (status === "OVERDUE" && !lastTest) {
@@ -142,12 +167,15 @@ export async function GET() {
         satisfied: currentSatisfied,
         hasFail: hasFailInCurrent,
         windowId: currentWindow.id,
-        lastTest: (status === "PASSED" || status === "FAILED") ? {
-          timestamp: lastTest?.timestamp,
-          user: lastTest?.user,
-          result: lastTest?.result
-        } : null,
-        overdueLabel
+        lastTest:
+          status === "PASSED" || status === "FAILED"
+            ? {
+                timestamp: lastTest?.timestamp,
+                user: lastTest?.user,
+                result: lastTest?.result,
+              }
+            : null,
+        overdueLabel,
       };
     });
 

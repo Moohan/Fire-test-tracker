@@ -6,8 +6,10 @@ import { z } from "zod";
 
 const LogSchema = z.object({
   equipmentId: z.string(),
-  type: z.enum(["VISUAL", "FUNCTIONAL", "ACCEPTANCE"]),
+  type: z.string(),
+  testCode: z.string().optional(),
   result: z.enum(["PASS", "FAIL"]),
+  hoursUsed: z.string().optional(),
   notes: z.string().optional(),
   timestamp: z.string().datetime({ offset: true }).optional(),
 });
@@ -23,10 +25,14 @@ export async function POST(req: Request) {
     const validated = LogSchema.safeParse(body);
 
     if (!validated.success) {
-      return NextResponse.json({ error: "Invalid request body", details: validated.error.format() }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid request body", details: validated.error.format() },
+        { status: 400 },
+      );
     }
 
-    const { equipmentId, type, result, notes, timestamp } = validated.data;
+    const { equipmentId, type, testCode, result, hoursUsed, notes, timestamp } =
+      validated.data;
 
     const result_log = await prisma.$transaction(async (tx) => {
       // 1. Fetch equipment status inside the transaction to prevent race conditions
@@ -44,16 +50,15 @@ export async function POST(req: Request) {
           equipmentId,
           userId: session.user.id,
           type,
+          testCode,
           result,
+          hoursUsed,
           notes,
           timestamp: timestamp ? new Date(timestamp) : undefined,
         },
       });
 
       // 3. Update the equipment status (OTR Workflow)
-      // "If any test is marked as Fail, the equipment status becomes "Off the Run"."
-      // "It remains OTR until a successful Acceptance Test is logged."
-
       let newStatus: "ON_RUN" | "OFF_RUN" | undefined;
 
       if (result === "FAIL") {
@@ -75,9 +80,15 @@ export async function POST(req: Request) {
     return NextResponse.json(result_log, { status: 201 });
   } catch (error: unknown) {
     if (error instanceof Error && error.message === "EQUIPMENT_NOT_FOUND") {
-      return NextResponse.json({ error: "Equipment not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Equipment not found" },
+        { status: 404 },
+      );
     }
     console.error("Failed to log test:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 },
+    );
   }
 }

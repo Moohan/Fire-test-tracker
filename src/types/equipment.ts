@@ -19,5 +19,9 @@ export interface Equipment {
   status: Status;
   sfrsId: string | null;
   mfrId: string | null;
+  expiryDate?: Date | string | null;
+  statutoryExamination?: boolean;
+  removedAt?: Date | string | null;
+  trackHours?: boolean;
   requirements?: EquipmentRequirement[];
 }
