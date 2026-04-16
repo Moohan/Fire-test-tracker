@@ -17,6 +17,8 @@ const subscribe = (callback: () => void) => {
     window.removeEventListener("offline", callback);
   };
 };
+import { useSyncExternalStore, useState, useEffect, Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 
 interface TestLogUser {
   fullName: string | null;
@@ -56,6 +58,7 @@ const formatUserName = (user: TestLogUser | undefined) => {
 };
 
 function DashboardContent() {
+  const router = useRouter();
   const { data: session } = useSession();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -365,7 +368,7 @@ function DashboardContent() {
         )}
       </main>
 
-      {session?.user.role === "ADMIN" && (
+      {session?.user?.role === "ADMIN" && (
         <div className="fixed bottom-6 right-6 z-40">
           <Link
             href="/admin/equipment"
