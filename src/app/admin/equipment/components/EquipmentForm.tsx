@@ -19,12 +19,16 @@ export default function EquipmentForm({ initialData }: EquipmentFormProps) {
         return e instanceof Error ? e.message : String(e);
       }
     },
-    null
+    null,
   );
 
   const handleDelete = async () => {
     if (!initialData?.id) return;
-    if (!confirm("Are you sure you want to delete this equipment? This action cannot be undone.")) {
+    if (
+      !confirm(
+        "Are you sure you want to delete this equipment? This action cannot be undone.",
+      )
+    ) {
       return;
     }
 
@@ -104,7 +108,7 @@ export default function EquipmentForm({ initialData }: EquipmentFormProps) {
               htmlFor="mfrId"
               className="block text-sm font-medium text-slate-700 uppercase tracking-wider"
             >
-              Manufacturer ID
+              Manufacturer Serial No. (Mfr ID)
             </label>
             <input
               type="text"
@@ -167,6 +171,80 @@ export default function EquipmentForm({ initialData }: EquipmentFormProps) {
             </select>
           </div>
 
+          <div className="flex items-center space-x-3 pt-6">
+            <input
+              type="checkbox"
+              name="trackHours"
+              id="trackHours"
+              value="true"
+              defaultChecked={initialData?.trackHours}
+              className="h-5 w-5 text-sfrs-red border-slate-300 rounded"
+            />
+            <label
+              htmlFor="trackHours"
+              className="text-sm font-medium text-slate-700 uppercase tracking-wider"
+            >
+              Track Actions/Hours Used
+            </label>
+          </div>
+
+          <div>
+            <label
+              htmlFor="expiryDate"
+              className="block text-sm font-medium text-slate-700 uppercase tracking-wider"
+            >
+              Expiry / Removal Date
+            </label>
+            <input
+              type="date"
+              name="expiryDate"
+              id="expiryDate"
+              defaultValue={
+                initialData?.expiryDate
+                  ? new Date(initialData.expiryDate).toISOString().split("T")[0]
+                  : ""
+              }
+              className="mt-1 block w-full border border-slate-300 rounded-md shadow-sm p-3 min-h-[44px]"
+            />
+          </div>
+
+          <div className="flex items-center space-x-3 pt-6">
+            <input
+              type="checkbox"
+              name="statutoryExamination"
+              id="statutoryExamination"
+              value="true"
+              defaultChecked={initialData?.statutoryExamination}
+              className="h-5 w-5 text-sfrs-red border-slate-300 rounded"
+            />
+            <label
+              htmlFor="statutoryExamination"
+              className="text-sm font-medium text-slate-700 uppercase tracking-wider"
+            >
+              Subject to statutory / external examination
+            </label>
+          </div>
+
+          <div>
+            <label
+              htmlFor="removedAt"
+              className="block text-sm font-medium text-slate-700 uppercase tracking-wider"
+            >
+              Removed from Service Date
+            </label>
+            <input
+              type="date"
+              name="removedAt"
+              id="removedAt"
+              defaultValue={
+                initialData?.removedAt
+                  ? new Date(initialData.removedAt).toISOString().split("T")[0]
+                  : ""
+              }
+              className="mt-1 block w-full border border-slate-300 rounded-md shadow-sm p-3 min-h-[44px]"
+            />
+          </div>
+
           <div>
             <label
               htmlFor="procedureFile"
@@ -208,7 +286,7 @@ export default function EquipmentForm({ initialData }: EquipmentFormProps) {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
             {frequencies.map((freq) => {
               const req = initialData?.requirements?.find(
-                (r) => r.frequency === freq
+                (r) => r.frequency === freq,
               );
               return (
                 <div key={freq}>

@@ -1,12 +1,14 @@
 "use client";
 
-import Dexie, { Table } from 'dexie';
+import Dexie, { Table } from "dexie";
 
 export interface PendingTestLog {
   id?: number;
   equipmentId: string;
-  type: 'VISUAL' | 'FUNCTIONAL' | 'ACCEPTANCE';
-  result: 'PASS' | 'FAIL';
+  type: string;
+  testCode?: string;
+  result: "PASS" | "FAIL";
+  hoursUsed?: string;
   notes?: string;
   timestamp: string;
   syncError?: string;
@@ -17,10 +19,18 @@ export class ETTDatabase extends Dexie {
   pendingLogs!: Table<PendingTestLog>;
 
   constructor() {
-    super('ETTDatabase');
-    this.version(2).stores({
-      pendingLogs: '++id, equipmentId, timestamp'
-    });
+    super("ETTDatabase");
+    this.version(3)
+      .stores({
+        pendingLogs: "++id, equipmentId, timestamp",
+      })
+      .upgrade(() => {
+        // No migration required because new fields (testCode, hoursUsed) are optional
+        // and existing records remain valid for version 3.
+        // No migration required because new fields (testCode, hoursUsed) are optional
+        // and existing records remain valid for version 3.
+        // Migration logic if needed
+      });
   }
 }
 

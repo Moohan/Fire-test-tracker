@@ -17,17 +17,22 @@ model User {
 }
 
 model Equipment {
-  id            String            @id @default(cuid())
-  externalId    String            @unique
-  name          String
-  location      String
-  category      String
-  procedurePath String?
-  status        String            @default("ON_RUN")
-  sfrsId        String?           @unique
-  mfrId         String?
-  testLogs      TestLog[]
-  requirements  TestRequirement[]
+  id                   String            @id @default(cuid())
+  externalId           String            @unique
+  name                 String
+  location             String
+  category             String
+  procedurePath        String?
+  status               String            @default("ON_RUN")
+  sfrsId               String?           @unique
+  mfrId                String?
+  expiryDate           DateTime?
+  statutoryExamination Boolean           @default(false)
+  removedAt            DateTime?
+  @@index([removedAt])
+  trackHours           Boolean           @default(false)
+  testLogs             TestLog[]
+  requirements         TestRequirement[]
 }
 
 model TestRequirement {
@@ -45,6 +50,8 @@ model TestLog {
   timestamp   DateTime  @default(now())
   type        String
   result      String
+  testCode    String?
+  hoursUsed   String?
   notes       String?
   user        User      @relation(fields: [userId], references: [id])
   equipment   Equipment @relation(fields: [equipmentId], references: [id])

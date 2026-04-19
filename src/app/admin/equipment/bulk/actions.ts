@@ -1,8 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { ensureAdmin } from "@/lib/authorization";
 import { revalidatePath } from "next/cache";
 import Papa from "papaparse";
 import { z } from "zod";
@@ -36,14 +35,6 @@ interface RawCSVRow {
   Annual_Test_Type?: string;
 }
 
-async function ensureAdmin() {
-  const session = await getServerSession(authOptions);
-  if (!session || session?.user?.role !== "ADMIN") {
-    throw new Error("Unauthorized");
-  }
-  return session;
-}
-
 export async function bulkUploadEquipment(formData: FormData) {
   await ensureAdmin();
 
@@ -74,7 +65,7 @@ export async function bulkUploadEquipment(formData: FormData) {
         Object.entries(rawRow as Record<string, string>).map(([k, v]) => [
           k,
           k.endsWith("_Test_Type") ? (v || "NONE").toUpperCase() : v,
-        ])
+        ]),
       );
 
       const validatedFields = CSVRowSchema.safeParse(normalizedRow);
@@ -83,7 +74,9 @@ export async function bulkUploadEquipment(formData: FormData) {
         const errorDetails = validatedFields.error.issues
           .map((e) => `${e.path.join(".")}: ${e.message}`)
           .join(", ");
-        results.errors.push(`Validation error for ID ${rawRow.Equipment_ID || "unknown"}: ${errorDetails}`);
+        results.errors.push(
+          `Validation error for ID ${rawRow.Equipment_ID || "unknown"}: ${errorDetails}`,
+        );
         continue;
       }
 
@@ -94,10 +87,16 @@ export async function bulkUploadEquipment(formData: FormData) {
         requirements.push({ frequency: "WEEKLY", type: row.Weekly_Test_Type });
       }
       if (row.Monthly_Test_Type !== "NONE") {
-        requirements.push({ frequency: "MONTHLY", type: row.Monthly_Test_Type });
+        requirements.push({
+          frequency: "MONTHLY",
+          type: row.Monthly_Test_Type,
+        });
       }
       if (row.Quarterly_Test_Type !== "NONE") {
-        requirements.push({ frequency: "QUARTERLY", type: row.Quarterly_Test_Type });
+        requirements.push({
+          frequency: "QUARTERLY",
+          type: row.Quarterly_Test_Type,
+        });
       }
       if (row.Annual_Test_Type !== "NONE") {
         requirements.push({ frequency: "ANNUAL", type: row.Annual_Test_Type });
@@ -111,7 +110,9 @@ export async function bulkUploadEquipment(formData: FormData) {
 
       if (equipment) {
         await prisma.$transaction([
-          prisma.testRequirement.deleteMany({ where: { equipmentId: equipment.id } }),
+          prisma.testRequirement.deleteMany({
+            where: { equipmentId: equipment.id },
+          }),
           prisma.equipment.update({
             where: { id: equipment.id },
             data: {
@@ -143,12 +144,19 @@ export async function bulkUploadEquipment(formData: FormData) {
       }
       results.success++;
     } catch (e: unknown) {
-      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
-         const target = (e.meta?.target as string[]) || [];
-         results.errors.push(`Duplicate field violation for ID ${rawRow.Equipment_ID}: ${target.join(", ")} already exists`);
+      if (
+        e instanceof Prisma.PrismaClientKnownRequestError &&
+        e.code === "P2002"
+      ) {
+        const target = (e.meta?.target as string[]) || [];
+        results.errors.push(
+          `Duplicate field violation for ID ${rawRow.Equipment_ID}: ${target.join(", ")} already exists`,
+        );
       } else {
         const errorMessage = e instanceof Error ? e.message : String(e);
-        results.errors.push(`Error processing ID ${rawRow.Equipment_ID || "unknown"}: ${errorMessage}`);
+        results.errors.push(
+          `Error processing ID ${rawRow.Equipment_ID || "unknown"}: ${errorMessage}`,
+        );
       }
     }
   }

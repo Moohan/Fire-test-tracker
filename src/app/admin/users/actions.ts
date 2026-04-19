@@ -1,14 +1,14 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { ensureAdmin } from "@/lib/authorization";
 import { revalidatePath } from "next/cache";
 import bcrypt from "bcrypt";
 import { z } from "zod";
 import { Prisma } from "@prisma/client";
 
-const PasswordPolicy = z.string()
+const PasswordPolicy = z
+  .string()
   .min(6, "Password must be at least 6 characters")
   .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
   .regex(/[a-z]/, "Password must contain at least one lowercase letter");
@@ -17,20 +17,12 @@ const UserSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
   fullName: z.string().min(1, "Full name is required"),
   password: PasswordPolicy,
-  role: z.enum(["ADMIN", "FIREFIGHTER", "CREW_COMMANDER", "WATCH_COMMANDER"]),
+  role: z.enum(["ADMIN", "FF", "CC", "WC"]),
 });
 
 const PasswordResetSchema = z.object({
   password: PasswordPolicy,
 });
-
-async function ensureAdmin() {
-  const session = await getServerSession(authOptions);
-  if (!session || session?.user?.role !== "ADMIN") {
-    throw new Error("Unauthorized");
-  }
-  return session;
-}
 
 export async function createUser(formData: FormData) {
   await ensureAdmin();
@@ -59,7 +51,10 @@ export async function createUser(formData: FormData) {
       },
     });
   } catch (e: unknown) {
-    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
+    if (
+      e instanceof Prisma.PrismaClientKnownRequestError &&
+      e.code === "P2002"
+    ) {
       throw new Error("Username already exists");
     }
     throw e;
@@ -80,7 +75,10 @@ export async function deleteUser(id: string) {
       where: { id },
     });
   } catch (e: unknown) {
-    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2025") {
+    if (
+      e instanceof Prisma.PrismaClientKnownRequestError &&
+      e.code === "P2025"
+    ) {
       throw new Error("User not found");
     }
     throw e;
@@ -109,7 +107,10 @@ export async function resetPassword(userId: string, formData: FormData) {
       data: { passwordHash },
     });
   } catch (e: unknown) {
-    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2025") {
+    if (
+      e instanceof Prisma.PrismaClientKnownRequestError &&
+      e.code === "P2025"
+    ) {
       throw new Error("User not found");
     }
     throw e;

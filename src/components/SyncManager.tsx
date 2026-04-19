@@ -14,10 +14,11 @@ export default function SyncManager() {
     // Always update pending count first
     const allPending = await db.pendingLogs.toArray();
     // Only count those that haven't failed with a 400/404 yet for the badge
-    const activePending = allPending.filter(p => !p.syncError);
+    const activePending = allPending.filter((p) => !p.syncError);
     setPendingCount(activePending.length);
 
-    if (isSyncingRef.current || !navigator.onLine || activePending.length === 0) return;
+    if (isSyncingRef.current || !navigator.onLine || activePending.length === 0)
+      return;
 
     isSyncingRef.current = true;
     setIsSyncing(true);
@@ -34,6 +35,8 @@ export default function SyncManager() {
               result: log.result,
               notes: log.notes,
               timestamp: log.timestamp,
+              testCode: log.testCode,
+              hoursUsed: log.hoursUsed,
             }),
           });
 
@@ -41,10 +44,12 @@ export default function SyncManager() {
             await db.pendingLogs.delete(log.id!);
           } else if (res.status === 400 || res.status === 404) {
             // Mark as failed instead of deleting
-            const errorData = await res.json().catch(() => ({ error: "Unknown error" }));
+            const errorData = await res
+              .json()
+              .catch(() => ({ error: "Unknown error" }));
             await db.pendingLogs.update(log.id!, {
               syncError: errorData.error || `HTTP ${res.status}`,
-              failedAt: new Date().toISOString()
+              failedAt: new Date().toISOString(),
             });
           }
         } catch (err) {
@@ -55,7 +60,7 @@ export default function SyncManager() {
       }
     } finally {
       const remainingLogs = await db.pendingLogs.toArray();
-      const remainingActive = remainingLogs.filter(p => !p.syncError);
+      const remainingActive = remainingLogs.filter((p) => !p.syncError);
       setPendingCount(remainingActive.length);
       setIsSyncing(false);
       isSyncingRef.current = false;
@@ -72,19 +77,19 @@ export default function SyncManager() {
     const handleOnline = () => sync();
     const handleOffline = () => {
       // Still query local DB to update UI badge when offline
-      db.pendingLogs.toArray().then(logs => {
-        setPendingCount(logs.filter(p => !p.syncError).length);
+      db.pendingLogs.toArray().then((logs) => {
+        setPendingCount(logs.filter((p) => !p.syncError).length);
       });
     };
 
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
 
     const interval = setInterval(sync, 60000); // Check every minute
 
     return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
       clearInterval(interval);
     };
   }, [sync]);

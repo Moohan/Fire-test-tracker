@@ -4,11 +4,21 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import UserList from "./components/UserList";
+import { Prisma } from "@prisma/client";
 
-export default async function ManageUsersPage() {
+export type UserDisplay = Prisma.UserGetPayload<{
+  select: {
+    id: true;
+    username: true;
+    fullName: true;
+    role: true;
+  };
+}>;
+
+export default async function AdminUsersPage() {
   const session = await getServerSession(authOptions);
 
-  if (!session || session?.user?.role !== "ADMIN") {
+  if (!session || !["ADMIN", "WC", "CC"].includes(session.user.role)) {
     redirect("/");
   }
 
@@ -23,11 +33,18 @@ export default async function ManageUsersPage() {
   });
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
+    <div className="p-6 max-w-7xl mx-auto">
       <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
-          <Link href="/admin/equipment" className="text-sm text-sfrs-red hover:underline mb-1 inline-block">← Back to Admin</Link>
-          <h1 className="text-3xl font-bold text-slate-900 leading-tight">Manage Users</h1>
+          <Link
+            href="/admin/equipment"
+            className="text-sm text-sfrs-red hover:underline mb-1 inline-block"
+          >
+            ← Back to Admin
+          </Link>
+          <h1 className="text-3xl font-bold text-slate-900 leading-tight">
+            Manage Users
+          </h1>
         </div>
         <Link
           href="/admin/users/new"
@@ -38,7 +55,10 @@ export default async function ManageUsersPage() {
       </header>
 
       <div className="bg-white shadow-sm border border-slate-200 rounded-lg overflow-hidden">
-        <UserList users={users} currentUserId={session?.user?.id} />
+        <UserList
+          users={users as UserDisplay[]}
+          currentUserId={session.user.id}
+        />
       </div>
     </div>
   );
