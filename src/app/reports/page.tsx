@@ -1,25 +1,12 @@
 "use client";
 
-import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { format } from "date-fns";
+import { useState, useMemo } from "react";
 import Link from "next/link";
-import { format, startOfYear, endOfYear } from "date-fns";
-import { jsPDF } from "jspdf";
+import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import JSZip from "jszip";
-import Papa from "papaparse";
-
-interface EquipmentListIcon {
-  id: string;
-  externalId: string;
-  name: string;
-  location: string;
-  sfrsId: string | null;
-  mfrId: string | null;
-  expiryDate: string | null;
-  statutoryExamination: boolean;
-  requirements?: Array<{ frequency: string }>;
-}
 
 interface LogEntry {
   id: string;
@@ -30,26 +17,45 @@ interface LogEntry {
   result: string;
   notes: string | null;
   hoursUsed: string | null;
-  equipment: EquipmentListIcon;
   user: {
-    fullName: string | null;
     username: string;
+    fullName: string | null;
   };
+  equipment: {
+    externalId: string;
+    name: string;
+    sfrsId: string | null;
+    mfrId: string | null;
+    expiryDate: string | null;
+    statutoryExamination: boolean;
+  };
+}
+
+interface EquipmentItem {
+  id: string;
+  externalId: string;
+  name: string;
+  location: string;
+  sfrsId: string | null;
+  mfrId: string | null;
+  expiryDate: string | null;
+  statutoryExamination: boolean;
+  requirements: Array<{ frequency: string }>;
 }
 
 export default function ReportsPage() {
   const [startDate, setStartDate] = useState(
-    format(startOfYear(new Date()), "yyyy-MM-dd"),
+    new Date(new Date().getFullYear(), 0, 1).toISOString().split("T")[0],
   );
   const [endDate, setEndDate] = useState(
-    format(endOfYear(new Date()), "yyyy-MM-dd"),
+    new Date(new Date().getFullYear(), 11, 31).toISOString().split("T")[0],
   );
   const [selectedEquipment, setSelectedEquipment] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [isDownloading, setIsDownloading] = useState(false);
 
-  const { data: equipment, isLoading } = useQuery<EquipmentListIcon[]>({
-    queryKey: ["equipment-list"],
+  const { data: equipment, isLoading } = useQuery<EquipmentItem[]>({
+    queryKey: ["equipment-list-reports"],
     queryFn: async () => {
       const res = await fetch("/api/dashboard");
       if (!res.ok) throw new Error("Failed to fetch equipment");
@@ -57,14 +63,14 @@ export default function ReportsPage() {
     },
   });
 
-  const filteredEquipment =
-    equipment
-      ?.filter(
-        (e) =>
-          e.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          e.externalId.toLowerCase().includes(searchTerm.toLowerCase()),
-      )
-      .sort((a, b) => a.name.localeCompare(b.name)) || [];
+  const filteredEquipment = useMemo(() => {
+    if (!equipment) return [];
+    return equipment.filter(
+      (e) =>
+        e.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        e.externalId.toLowerCase().includes(searchTerm.toLowerCase()),
+    );
+  }, [equipment, searchTerm]);
 
   const toggleEquipment = (id: string) => {
     setSelectedEquipment((prev) =>
@@ -74,6 +80,7 @@ export default function ReportsPage() {
 
   const handleDownloadCSV = async () => {
     setIsDownloading(true);
+    let url: string | null = null;
     try {
       const ids =
         selectedEquipment.length > 0
@@ -82,38 +89,38 @@ export default function ReportsPage() {
       const res = await fetch(
         `/api/reports/logs?start=${startDate}&end=${endDate}&ids=${ids.join(",")}`,
       );
+      if (!res.ok) throw new Error("Failed to fetch logs");
       const logs: LogEntry[] = await res.json();
 
       const headers = [
         "Date",
-        "Equipment",
-        "SFRS ID",
+        "Equipment ID",
+        "Equipment Name",
         "Test Code",
         "Result",
-        "Defects/Notes",
-        "Actions/Hours",
+        "Notes",
+        "Hours Used",
         "Tester",
       ];
-      const data = logs.map((log) => [
-        format(new Date(log.timestamp), "dd/MM/yyyy"),
-        log.equipment.name,
-        log.equipment.sfrsId || "",
-        log.testCode || log.type,
-        log.result,
-        log.notes || "",
-        log.hoursUsed || "",
-        log.user.fullName || log.user.username,
+      const rows = logs.map((l) => [
+        format(new Date(l.timestamp), "dd/MM/yyyy HH:mm"),
+        l.equipment.externalId,
+        l.equipment.name,
+        l.testCode || l.type,
+        l.result,
+        (l.notes || "").replace(/"/g, '""'),
+        l.hoursUsed || "",
+        l.user.fullName || l.user.username,
       ]);
 
-      // Using PapaParse for robust CSV generation with proper escaping
-      const csvContent = Papa.unparse({
-        fields: headers,
-        data: data,
-      });
+      const csvContent = [
+        headers.join(","),
+        ...rows.map((r) => r.map((cell) => `"${cell}"`).join(",")),
+      ].join("\n");
 
       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
       const link = document.createElement("a");
-      const url = URL.createObjectURL(blob);
+      url = URL.createObjectURL(blob);
       link.setAttribute("href", url);
       link.setAttribute("download", `test_logs_${startDate}_${endDate}.csv`);
       link.style.visibility = "hidden";
@@ -124,12 +131,14 @@ export default function ReportsPage() {
       console.error(err);
       alert("Failed to download CSV");
     } finally {
+      if (url) URL.revokeObjectURL(url);
       setIsDownloading(false);
     }
   };
 
   const handleDownloadPDF = async () => {
     setIsDownloading(true);
+    let url: string | null = null;
     try {
       const ids =
         selectedEquipment.length > 0
@@ -138,6 +147,7 @@ export default function ReportsPage() {
       const res = await fetch(
         `/api/reports/logs?start=${startDate}&end=${endDate}&ids=${ids.join(",")}`,
       );
+      if (!res.ok) throw new Error("Failed to fetch logs");
       const allLogs: LogEntry[] = await res.json();
 
       const zip = new JSZip();
@@ -227,8 +237,9 @@ export default function ReportsPage() {
             log.hoursUsed || "",
             log.user.fullName || log.user.username,
             (log.user.fullName || log.user.username)
-              .split(" ")
-              .map((n) => n[0])
+              .split(/\s+/)
+              .filter(Boolean)
+              .map((n) => n.charAt(0))
               .join(""),
             "",
           ]),
@@ -249,13 +260,15 @@ export default function ReportsPage() {
 
       const content = await zip.generateAsync({ type: "blob" });
       const link = document.createElement("a");
-      link.href = URL.createObjectURL(content);
+      url = URL.createObjectURL(content);
+      link.href = url;
       link.download = `equipment_logs_${startDate}_${endDate}.zip`;
       link.click();
     } catch (err) {
       console.error(err);
       alert("Failed to generate PDF ZIP");
     } finally {
+      if (url) URL.revokeObjectURL(url);
       setIsDownloading(false);
     }
   };

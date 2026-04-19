@@ -11,7 +11,7 @@
 
 # Error details
 
-```
+```text
 Error: browserType.launch: Executable doesn't exist at /home/jules/.cache/ms-playwright/chromium_headless_shell-1217/chrome-headless-shell-linux64/chrome-headless-shell
 ╔════════════════════════════════════════════════════════════╗
 ║ Looks like Playwright was just installed or updated.       ║
@@ -21,4 +21,4 @@ Error: browserType.launch: Executable doesn't exist at /home/jules/.cache/ms-pla
 ║                                                            ║
 ║ <3 Playwright Team                                         ║
 ╚════════════════════════════════════════════════════════════╝
-```
+```text

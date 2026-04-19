@@ -6,7 +6,7 @@ import { z } from "zod";
 
 const LogSchema = z.object({
   equipmentId: z.string(),
-  type: z.string(),
+  type: z.string().min(1),
   testCode: z.string().optional(),
   result: z.enum(["PASS", "FAIL"]),
   hoursUsed: z.string().optional(),

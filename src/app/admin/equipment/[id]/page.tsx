@@ -4,7 +4,36 @@ import { redirect, notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import EquipmentForm from "../components/EquipmentForm";
-import { Equipment } from "@/types/equipment";
+import { Equipment, Frequency, TestType } from "@/types/equipment";
+import { Prisma } from "@prisma/client";
+
+type EquipmentWithRequirements = Prisma.EquipmentGetPayload<{
+  include: { requirements: true };
+}>;
+
+function toEquipmentInitialData(raw: EquipmentWithRequirements): Equipment {
+  return {
+    id: raw.id,
+    externalId: raw.externalId,
+    name: raw.name,
+    location: raw.location,
+    category: raw.category,
+    procedurePath: raw.procedurePath,
+    status: raw.status as "ON_RUN" | "OFF_RUN",
+    sfrsId: raw.sfrsId,
+    mfrId: raw.mfrId,
+    expiryDate: raw.expiryDate ? raw.expiryDate.toISOString() : null,
+    removedAt: raw.removedAt ? raw.removedAt.toISOString() : null,
+    statutoryExamination: Boolean(raw.statutoryExamination),
+    trackHours: Boolean(raw.trackHours),
+    requirements: raw.requirements.map((r) => ({
+      id: r.id,
+      equipmentId: r.equipmentId,
+      frequency: r.frequency as Frequency,
+      type: r.type as TestType,
+    })),
+  };
+}
 
 export default async function EditEquipmentPage({
   params,
@@ -47,7 +76,7 @@ export default async function EditEquipmentPage({
       </header>
 
       <div className="bg-white shadow-sm border border-slate-200 rounded-lg p-6">
-        <EquipmentForm initialData={equipment as unknown as Equipment} />
+        <EquipmentForm initialData={toEquipmentInitialData(equipment)} />
       </div>
     </div>
   );

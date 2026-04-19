@@ -58,8 +58,16 @@ export async function PUT(
       data.location = formData.get("location") as string;
     if (formData.has("category"))
       data.category = formData.get("category") as string;
-    if (formData.has("status"))
-      data.status = formData.get("status") as "ON_RUN" | "OFF_RUN";
+
+    if (formData.has("status")) {
+      const status = formData.get("status") as string;
+      if (status === "ON_RUN" || status === "OFF_RUN") {
+        data.status = status;
+      } else {
+        return NextResponse.json({ error: "Invalid status" }, { status: 400 });
+      }
+    }
+
     if (formData.has("trackHours"))
       data.trackHours = formData.get("trackHours") === "true";
     if (formData.has("removedAt")) {

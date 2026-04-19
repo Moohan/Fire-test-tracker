@@ -1,17 +1,19 @@
 import { withAuth } from "next-auth/middleware";
 import { NextResponse } from "next/server";
+import { PRIVILEGED_ROLES } from "./lib/roles";
 
 export default withAuth(
   function middleware(req) {
-    const token = req.nextauth.token;
-    const path = req.nextUrl.pathname;
-    const roles = ["ADMIN", "WC", "CC"];
+    const { pathname } = req.nextUrl;
+    const { token } = req.nextauth;
+    const role = token?.role as string;
 
-    // Role-based protection for admin and reports
-    if (path.startsWith("/admin") || path.startsWith("/reports")) {
-      if (!roles.includes(token?.role as string)) {
-        return NextResponse.redirect(new URL("/dashboard", req.url));
-      }
+    // Admin-only areas
+    if (
+      pathname.startsWith("/admin") &&
+      !(PRIVILEGED_ROLES as readonly string[]).includes(role)
+    ) {
+      return NextResponse.redirect(new URL("/dashboard", req.url));
     }
 
     return NextResponse.next();
@@ -19,9 +21,6 @@ export default withAuth(
   {
     callbacks: {
       authorized: ({ token }) => !!token,
-    },
-    pages: {
-      signIn: "/login",
     },
   },
 );

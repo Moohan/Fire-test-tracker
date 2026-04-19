@@ -1,8 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { ensureAdmin } from "@/lib/authorization";
 import { revalidatePath } from "next/cache";
 import Papa from "papaparse";
 import { z } from "zod";
@@ -34,14 +33,6 @@ interface RawCSVRow {
   Monthly_Test_Type?: string;
   Quarterly_Test_Type?: string;
   Annual_Test_Type?: string;
-}
-
-async function ensureAdmin() {
-  const session = await getServerSession(authOptions);
-  if (!session || session?.user?.role !== "ADMIN") {
-    throw new Error("Unauthorized");
-  }
-  return session;
 }
 
 export async function bulkUploadEquipment(formData: FormData) {

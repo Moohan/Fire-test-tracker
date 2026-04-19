@@ -1,8 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { ensureAdmin } from "@/lib/authorization";
 import { revalidatePath } from "next/cache";
 import { writeFile, mkdir, unlink } from "fs/promises";
 import path from "path";
@@ -28,14 +27,6 @@ const RequirementSchema = z.object({
   frequency: z.enum(["WEEKLY", "MONTHLY", "QUARTERLY", "ANNUAL"]),
   type: z.enum(["VISUAL", "FUNCTIONAL"]),
 });
-
-async function ensureAdmin() {
-  const session = await getServerSession(authOptions);
-  if (!session || !["ADMIN", "WC", "CC"].includes(session.user.role)) {
-    throw new Error("Unauthorized");
-  }
-  return session;
-}
 
 /**
  * Normalizes a procedure path to be relative to the public directory.

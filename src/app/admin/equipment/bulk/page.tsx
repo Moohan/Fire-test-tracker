@@ -40,16 +40,16 @@ export default async function BulkUploadPage() {
           Your CSV should include the following columns:
         </p>
         <ul className="list-disc list-inside text-sm text-slate-600 space-y-1 font-mono bg-white p-4 rounded border">
-          <li>externalId (Required, Unique)</li>
-          <li>name (Required)</li>
-          <li>location (Required)</li>
-          <li>category (Required)</li>
-          <li>sfrsId (Optional)</li>
-          <li>mfrId (Optional)</li>
-          <li>req_WEEKLY (Optional: VISUAL/FUNCTIONAL)</li>
-          <li>req_MONTHLY (Optional: VISUAL/FUNCTIONAL)</li>
-          <li>req_QUARTERLY (Optional: VISUAL/FUNCTIONAL)</li>
-          <li>req_ANNUAL (Optional: VISUAL/FUNCTIONAL)</li>
+          <li>Equipment_ID (Required, Unique)</li>
+          <li>Name (Required)</li>
+          <li>Location (Required)</li>
+          <li>Category (Required)</li>
+          <li>SFRS_ID (Optional)</li>
+          <li>Manufacturer_ID (Optional)</li>
+          <li>Weekly_Test_Type (Optional: VISUAL/FUNCTIONAL)</li>
+          <li>Monthly_Test_Type (Optional: VISUAL/FUNCTIONAL)</li>
+          <li>Quarterly_Test_Type (Optional: VISUAL/FUNCTIONAL)</li>
+          <li>Annual_Test_Type (Optional: VISUAL/FUNCTIONAL)</li>
         </ul>
       </div>
     </div>

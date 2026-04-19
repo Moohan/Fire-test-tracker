@@ -1,47 +1,35 @@
 "use client";
 
-import { useRouter, useParams } from "next/navigation";
-import { useState, useEffect } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import Link from "next/link";
-import { db } from "@/lib/db";
 import { useSession } from "next-auth/react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState, useEffect, useMemo } from "react";
+import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
+import { db } from "@/lib/db";
+import { Equipment, EquipmentRequirement } from "@/types/equipment";
 
 const TEST_CODES = [
   { code: "A", name: "Acceptance", type: "ACCEPTANCE" },
   { code: "U", name: "After Use", type: "FUNCTIONAL" },
   { code: "M", name: "Monthly", type: "FUNCTIONAL" },
   { code: "Q", name: "Quarterly", type: "FUNCTIONAL" },
-  { code: "C", name: "Commencement of Duty", type: "VISUAL" },
-  { code: "W", name: "Weekly", type: "VISUAL" },
+  { code: "C", name: "Commencement of Duty", type: "FUNCTIONAL" },
+  { code: "W", name: "Weekly", type: "FUNCTIONAL" },
   { code: "12", name: "Annually", type: "FUNCTIONAL" },
-  { code: "OIC", name: "On Instruction of OIC", type: "VISUAL" },
-] as const;
+  { code: "OIC", name: "On Instruction", type: "FUNCTIONAL" },
+];
 
-interface Requirement {
-  frequency: string;
-  type: string;
-}
-
-interface EquipmentItem {
-  id: string;
-  externalId: string;
-  name: string;
-  location: string;
-  category: string;
-  procedurePath: string | null;
-  removedAt: string | null;
-  trackHours: boolean;
-  requirements?: Requirement[];
+interface EquipmentWithRequirements extends Equipment {
+  requirements: EquipmentRequirement[];
 }
 
 export default function LogTestPage() {
-  const { id } = useParams<{ id: string }>();
+  const { id } = useParams() as { id: string };
   const router = useRouter();
-  const queryClient = useQueryClient();
   const { data: session } = useSession();
+  const queryClient = useQueryClient();
 
-  const [testCode, setTestCode] = useState<string>("W");
+  const [testCode, setTestCode] = useState("W");
   const [result, setResult] = useState<"PASS" | "FAIL">("PASS");
   const [hoursUsed, setHoursUsed] = useState("");
   const [notes, setNotes] = useState("");
@@ -51,33 +39,32 @@ export default function LogTestPage() {
 
   useEffect(() => {
     setIsOffline(!navigator.onLine);
-    const handleOnline = () => setIsOffline(false);
-    const handleOffline = () => setIsOffline(true);
-    window.addEventListener("online", handleOnline);
-    window.addEventListener("offline", handleOffline);
+    const handleStatus = () => setIsOffline(!navigator.onLine);
+    window.addEventListener("online", handleStatus);
+    window.addEventListener("offline", handleStatus);
     return () => {
-      window.removeEventListener("online", handleOnline);
-      window.removeEventListener("offline", handleOffline);
+      window.removeEventListener("online", handleStatus);
+      window.removeEventListener("offline", handleStatus);
     };
   }, []);
 
-  const { data: item, isLoading } = useQuery<EquipmentItem>({
+  const { data: item, isLoading } = useQuery<EquipmentWithRequirements>({
     queryKey: ["equipment-item", id],
     queryFn: async () => {
       const res = await fetch(`/api/equipment/${id}`);
-      if (!res.ok) throw new Error("Failed to fetch equipment data");
+      if (!res.ok) throw new Error("Failed to fetch equipment");
       return res.json();
     },
   });
 
-  const canMarkRemoved =
-    session?.user?.role && ["ADMIN", "WC", "CC"].includes(session.user.role);
+  const canMarkRemoved = useMemo(() => {
+    return ["ADMIN", "WC", "CC"].includes(session?.user?.role || "");
+  }, [session]);
 
   const handleMarkRemoved = async () => {
-    if (!item || !canMarkRemoved) return;
     if (
       !confirm(
-        "Are you sure you want to mark this equipment as removed from service?",
+        "Are you sure? This will remove the equipment from active rotation. This action will be logged.",
       )
     )
       return;
@@ -85,26 +72,22 @@ export default function LogTestPage() {
     setIsSubmitting(true);
     try {
       const formData = new FormData();
-      formData.append("externalId", item.externalId);
-      formData.append("name", item.name);
-      formData.append("location", item.location);
-      formData.append("category", item.category);
       formData.append("status", "OFF_RUN");
-      formData.append("removedAt", new Date().toISOString().split("T")[0]);
+      formData.append("removedAt", new Date().toISOString());
 
       const res = await fetch(`/api/equipment/${id}`, {
         method: "PUT",
         body: formData,
       });
 
-      if (!res.ok) throw new Error("Failed to mark equipment as removed");
+      if (!res.ok) throw new Error("Failed to update status");
 
       await queryClient.invalidateQueries({
         queryKey: ["equipment-dashboard"],
       });
       router.push("/dashboard");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+    } catch {
+      alert("An error occurred");
       setIsSubmitting(false);
     }
   };

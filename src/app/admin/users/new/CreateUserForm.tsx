@@ -110,7 +110,7 @@ export default function CreateUserForm() {
             name="role"
             id="role"
             required
-            defaultValue="FIREFIGHTER"
+            defaultValue="FF"
             className="mt-1 block w-full border border-slate-300 rounded-md shadow-sm p-3 focus:ring-sfrs-red focus:border-sfrs-red min-h-[44px]"
           >
             <option value="FF">Firefighter (FF)</option>

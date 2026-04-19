@@ -12,7 +12,8 @@ export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const start = searchParams.get("start");
   const end = searchParams.get("end");
-  const ids = searchParams.get("ids")?.split(",");
+  const idsParam = searchParams.get("ids");
+  const ids = idsParam ? idsParam.split(",").filter(Boolean) : [];
 
   if (!start || !end) {
     return NextResponse.json(
@@ -21,13 +22,24 @@ export async function GET(req: Request) {
     );
   }
 
+  const startDate = new Date(start);
+  let endDate = new Date(end);
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(end)) {
+    endDate = new Date(end + "T23:59:59.999Z");
+  }
+
+  if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+    return NextResponse.json({ error: "Invalid date format" }, { status: 400 });
+  }
+
   const logs = await prisma.testLog.findMany({
     where: {
       timestamp: {
-        gte: new Date(start),
-        lte: new Date(end + "T23:59:59.999Z"),
+        gte: startDate,
+        lte: endDate,
       },
-      equipmentId: ids && ids.length > 0 ? { in: ids } : undefined,
+      equipmentId: ids.length > 0 ? { in: ids } : undefined,
     },
     include: {
       equipment: true,

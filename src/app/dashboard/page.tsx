@@ -6,7 +6,7 @@ import { format } from "date-fns";
 import { enGB } from "date-fns/locale";
 import Link from "next/link";
 import { useState, useEffect, useSyncExternalStore, Suspense } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 
 // Local storage helper for offline sync status
 const subscribe = (callback: () => void) => {
@@ -17,8 +17,6 @@ const subscribe = (callback: () => void) => {
     window.removeEventListener("offline", callback);
   };
 };
-import { useSyncExternalStore, useState, useEffect, Suspense } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
 
 interface TestLogUser {
   fullName: string | null;
@@ -58,10 +56,8 @@ const formatUserName = (user: TestLogUser | undefined) => {
 };
 
 function DashboardContent() {
-  const router = useRouter();
   const { data: session } = useSession();
   const searchParams = useSearchParams();
-  const router = useRouter();
   const [showQueuedMessage, setShowQueuedMessage] = useState(false);
 
   useEffect(() => {
@@ -102,24 +98,15 @@ function DashboardContent() {
       </div>
     );
 
-  if (error && !equipment) {
+  if (error)
     return (
-      <div className="p-6 text-center space-y-4">
-        <div className="text-sfrs-red font-bold">
-          Error: {(error as Error).message}
-        </div>
-        <button
-          onClick={() => router.refresh()}
-          className="bg-sfrs-red text-white px-4 py-2 rounded-md text-sm font-bold min-h-[44px]"
-        >
-          Retry
-        </button>
+      <div className="p-6 text-center text-sfrs-red font-bold">
+        Error loading dashboard. Please try refreshing.
       </div>
     );
-  }
 
-  const activeEquipment = equipment?.filter((item) => !item.removedAt) || [];
-  const removedEquipment = equipment?.filter((item) => item.removedAt) || [];
+  const activeEquipment = (equipment || []).filter((e) => !e.removedAt);
+  const removedEquipment = (equipment || []).filter((e) => e.removedAt);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -129,10 +116,8 @@ function DashboardContent() {
         return "bg-sfrs-red";
       case "OVERDUE":
         return "bg-sfrs-amber";
-      case "OUTSTANDING":
-        return "bg-sfrs-grey";
       default:
-        return "bg-slate-300";
+        return "bg-sfrs-grey";
     }
   };
 

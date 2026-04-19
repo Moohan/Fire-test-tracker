@@ -4,13 +4,16 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import UserList from "./components/UserList";
+import { Prisma } from "@prisma/client";
 
-interface UserDisplay {
-  id: string;
-  username: string;
-  fullName: string | null;
-  role: string;
-}
+export type UserDisplay = Prisma.UserGetPayload<{
+  select: {
+    id: true;
+    username: true;
+    fullName: true;
+    role: true;
+  };
+}>;
 
 export default async function AdminUsersPage() {
   const session = await getServerSession(authOptions);

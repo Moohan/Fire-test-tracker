@@ -25,6 +25,10 @@ export class ETTDatabase extends Dexie {
         pendingLogs: "++id, equipmentId, timestamp",
       })
       .upgrade(() => {
+        // No migration required because new fields (testCode, hoursUsed) are optional
+        // and existing records remain valid for version 3.
+        // No migration required because new fields (testCode, hoursUsed) are optional
+        // and existing records remain valid for version 3.
         // Migration logic if needed
       });
   }

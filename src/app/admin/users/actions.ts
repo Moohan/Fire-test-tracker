@@ -1,8 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { ensureAdmin } from "@/lib/authorization";
 import { revalidatePath } from "next/cache";
 import bcrypt from "bcrypt";
 import { z } from "zod";
@@ -24,14 +23,6 @@ const UserSchema = z.object({
 const PasswordResetSchema = z.object({
   password: PasswordPolicy,
 });
-
-async function ensureAdmin() {
-  const session = await getServerSession(authOptions);
-  if (!session || !["ADMIN", "WC", "CC"].includes(session.user.role)) {
-    throw new Error("Unauthorized");
-  }
-  return session;
-}
 
 export async function createUser(formData: FormData) {
   await ensureAdmin();

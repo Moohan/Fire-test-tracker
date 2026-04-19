@@ -23,6 +23,7 @@ export default async function AuditPage() {
         },
       },
       orderBy: { timestamp: "desc" },
+      take: 20,
     }),
     prisma.equipment.findMany({
       select: { id: true, name: true, externalId: true },
