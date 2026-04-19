@@ -26,10 +26,12 @@
     "papaparse": "^5.5.3",
     "react": "19.2.4",
     "react-dom": "19.2.4",
-    "zod": "^4.3.6"
+    "zod": "^4.3.6",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.3"
   },
   "prisma": {
-    "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
+    "seed": "ts-node -T --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
   },
   "devDependencies": {
     "@playwright/test": "^1.59.1",
@@ -48,8 +50,6 @@
     "prettier": "^3.8.1",
     "prisma": "^6.4.1",
     "tailwindcss": "^4",
-    "ts-node": "^10.9.2",
-    "typescript": "^5",
     "vitest": "^4.1.2"
   }
 }

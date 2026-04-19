@@ -114,7 +114,7 @@ export async function saveEquipment(formData: FormData, id?: string) {
       } => r !== null,
     );
 
-  const data: any = {
+  const baseData = {
     name,
     location,
     status,
@@ -136,13 +136,15 @@ export async function saveEquipment(formData: FormData, id?: string) {
         prisma.testRequirement.deleteMany({ where: { equipmentId: id } }),
         prisma.equipment.update({
           where: { id },
-          data,
+          data: baseData as Prisma.EquipmentUpdateInput,
         }),
       ]);
     } else {
-      data.externalId = randomUUID();
       await prisma.equipment.create({
-        data,
+        data: {
+          ...baseData,
+          externalId: randomUUID(),
+        } as Prisma.EquipmentCreateInput,
       });
     }
   } catch (error: unknown) {

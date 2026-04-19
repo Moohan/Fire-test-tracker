@@ -4,7 +4,6 @@
 import { useTransition } from "react";
 import { saveEquipment, deleteEquipment } from "../actions";
 import { Equipment } from "@/types/equipment";
-import { useRouter } from "next/navigation";
 
 interface EquipmentFormProps {
   initialData?: Equipment & {
@@ -24,7 +23,6 @@ const locations = [
 export function EquipmentForm({ initialData }: EquipmentFormProps) {
   const [isPending, startTransition] = useTransition();
   const [isDeleting, startDeletingTransition] = useTransition();
-  const router = useRouter();
 
   const frequencies = ["WEEKLY", "MONTHLY", "QUARTERLY", "ANNUAL"] as const;
 
@@ -34,8 +32,8 @@ export function EquipmentForm({ initialData }: EquipmentFormProps) {
     startTransition(async () => {
       try {
         await saveEquipment(formData, initialData?.id);
-      } catch (error: any) {
-        alert(error.message);
+      } catch (error: unknown) {
+        alert(error instanceof Error ? error.message : "An error occurred");
       }
     });
   };
@@ -52,8 +50,8 @@ export function EquipmentForm({ initialData }: EquipmentFormProps) {
     startDeletingTransition(async () => {
       try {
         await deleteEquipment(initialData.id);
-      } catch (error: any) {
-        alert(error.message);
+      } catch (error: unknown) {
+        alert(error instanceof Error ? error.message : "An error occurred");
       }
     });
   };

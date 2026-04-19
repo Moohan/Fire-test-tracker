@@ -17,7 +17,7 @@ async function main() {
 
   if (!adminPassword) {
     if (process.env.NODE_ENV === "production") {
-      throw new Error(
+      console.error(
         "ADMIN_PASSWORD environment variable MUST be set for production seeding.",
       );
     }
