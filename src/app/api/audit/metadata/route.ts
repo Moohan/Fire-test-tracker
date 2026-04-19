@@ -11,8 +11,8 @@ export async function GET() {
 
   const [equipment, users] = await Promise.all([
     prisma.equipment.findMany({
-      select: { id: true, externalId: true, name: true },
-      orderBy: { externalId: "asc" },
+      select: { id: true,  name: true },
+      orderBy: { name: "asc" },
     }),
     prisma.user.findMany({
       select: { id: true, username: true },

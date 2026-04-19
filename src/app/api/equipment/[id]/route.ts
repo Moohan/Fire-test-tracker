@@ -34,7 +34,6 @@ export async function PUT(
   const { id } = await params;
   const session = await getServerSession(authOptions);
 
-  // Security Fix: Enforce role-based authorization for updates
   if (!session || !["ADMIN", "WC", "CC"].includes(session.user.role)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -42,22 +41,16 @@ export async function PUT(
   try {
     const formData = await req.formData();
     const data: {
-      externalId?: string;
       name?: string;
-      location?: string;
-      category?: string;
+      location?: string | null;
       status?: "ON_RUN" | "OFF_RUN";
       removedAt?: Date | null;
       trackHours?: boolean;
     } = {};
 
-    if (formData.has("externalId"))
-      data.externalId = formData.get("externalId") as string;
     if (formData.has("name")) data.name = formData.get("name") as string;
     if (formData.has("location"))
-      data.location = formData.get("location") as string;
-    if (formData.has("category"))
-      data.category = formData.get("category") as string;
+      data.location = (formData.get("location") as string) || null;
 
     if (formData.has("status")) {
       const status = formData.get("status") as string;

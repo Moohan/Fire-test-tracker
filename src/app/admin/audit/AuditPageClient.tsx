@@ -1,160 +1,115 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { enGB } from "date-fns/locale";
-import { useState } from "react";
 import Link from "next/link";
 
 interface AuditLog {
   id: string;
   equipmentId: string;
-  timestamp: string | Date;
+  userId: string;
+  timestamp: string;
   type: string;
   result: string;
+  testCode: string | null;
+  hoursUsed: string | null;
   notes: string | null;
   equipment: {
-    externalId: string;
+    id: string;
     name: string;
   };
   user: {
     username: string;
-    fullName: string | null;
   };
-}
-
-interface AuditResponse {
-  logs: AuditLog[];
-  pagination: {
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-  };
-}
-
-interface MetadataResponse {
-  equipment: { id: string; externalId: string; name: string }[];
-  users: { id: string; username: string; fullName: string | null }[];
 }
 
 interface AuditPageClientProps {
-  initialLogs: AuditLog[];
-  equipment: { id: string; externalId: string; name: string }[];
-  users: { id: string; username: string; fullName: string | null }[];
+  initialMetadata: {
+    equipment: { id: string; name: string }[];
+    users: { id: string; username: string }[];
+  };
 }
 
 export default function AuditPageClient({
-  initialLogs,
-  equipment,
-  users,
+  initialMetadata,
 }: AuditPageClientProps) {
-  const queryClient = useQueryClient();
-  const [filterResult, setFilterResult] = useState<string>("");
-  const [filterEquipment, setFilterEquipment] = useState<string>("");
-  const [filterUser, setFilterUser] = useState<string>("");
   const [page, setPage] = useState(1);
+  const [filterEquipment, setFilterEquipment] = useState("");
+  const [filterUser, setFilterUser] = useState("");
+  const [filterResult, setFilterResult] = useState("");
 
-  // Metadata is passed from server but also fetched for freshness if needed,
-  // though we can just use the props.
-  // Using query with initialData for metadata
-  const { data: metadata } = useQuery<MetadataResponse>({
+  const { data: metadata } = useQuery({
     queryKey: ["audit-metadata"],
     queryFn: async () => {
       const res = await fetch("/api/audit/metadata");
       if (!res.ok) throw new Error("Failed to fetch metadata");
-      return res.json();
+      return res.json() as Promise<AuditPageClientProps["initialMetadata"]>;
     },
-    initialData: { equipment, users },
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    initialData: initialMetadata,
   });
 
-  const { data, isLoading } = useQuery<AuditResponse>({
-    queryKey: ["audit-logs", page, filterResult, filterEquipment, filterUser],
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: ["audit-logs", page, filterEquipment, filterUser, filterResult],
     queryFn: async () => {
       const params = new URLSearchParams({
         page: page.toString(),
-        limit: "20",
+        equipmentId: filterEquipment,
+        userId: filterUser,
+        result: filterResult,
       });
-      if (filterResult) params.append("result", filterResult);
-      if (filterEquipment) params.append("equipmentId", filterEquipment);
-      if (filterUser) params.append("userId", filterUser);
-
       const res = await fetch(`/api/audit?${params.toString()}`);
       if (!res.ok) throw new Error("Failed to fetch logs");
-      return res.json();
-    },
-    // Only use initialLogs for the first page with no filters
-    initialData:
-      page === 1 && !filterResult && !filterEquipment && !filterUser
-        ? {
-            logs: initialLogs,
-            pagination: {
-              total: initialLogs.length,
-              page: 1,
-              limit: 20,
-              totalPages: Math.ceil(initialLogs.length / 20) || 1,
-            },
-          }
-        : undefined,
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const res = await fetch(`/api/audit?id=${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Failed to delete log");
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["audit-logs"] });
+      return res.json() as Promise<{
+        logs: AuditLog[];
+        pagination: {
+          total: number;
+          page: number;
+          limit: number;
+          totalPages: number;
+        };
+      }>;
     },
   });
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (
-      confirm(
-        "Are you sure you want to delete this log? This action is irreversible and will be logged in the audit trail.",
+      !confirm(
+        "Are you sure you want to PERMANENTLY delete this log entry? This action cannot be undone and will be recorded in the audit trail.",
       )
     ) {
-      deleteMutation.mutate(id);
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/audit?id=${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete log");
+      refetch();
+    } catch (err) {
+      alert("Error deleting log: " + (err instanceof Error ? err.message : "Unknown error"));
     }
   };
 
   return (
-    <div className="p-4 sm:p-6 bg-slate-50 min-h-screen">
+    <div className="min-h-screen bg-slate-50 p-4 sm:p-6">
       <div className="max-w-7xl mx-auto space-y-6">
-        <header className="flex flex-col gap-4">
-          <div>
-            <Link
-              href="/admin/equipment"
-              className="text-sm text-sfrs-red hover:underline mb-1 inline-block"
-            >
-              ← Back to Admin
-            </Link>
-            <h1 className="text-2xl font-bold text-slate-900 leading-tight">
-              Audit History
-            </h1>
+        <header className="flex flex-col space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <Link
+                href="/admin/equipment"
+                className="text-sm text-sfrs-red hover:underline mb-1 inline-block"
+              >
+                ← Back to Equipment
+              </Link>
+              <h1 className="text-2xl font-bold text-slate-900 uppercase tracking-tight">
+                Audit History
+              </h1>
+            </div>
           </div>
 
-          <div className="bg-white p-4 rounded-lg shadow-sm border border-slate-200 grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                Result
-              </label>
-              <select
-                value={filterResult}
-                onChange={(e) => {
-                  setFilterResult(e.target.value);
-                  setPage(1);
-                }}
-                className="w-full border-slate-300 rounded-md text-sm focus:ring-sfrs-red focus:border-sfrs-red p-2 min-h-[44px]"
-              >
-                <option value="">All Results</option>
-                <option value="PASS">PASS</option>
-                <option value="FAIL">FAIL</option>
-              </select>
-            </div>
-
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
             <div className="space-y-1">
               <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                 Equipment
@@ -170,7 +125,7 @@ export default function AuditPageClient({
                 <option value="">All Equipment</option>
                 {metadata?.equipment.map((e) => (
                   <option key={e.id} value={e.id}>
-                    {e.externalId} - {e.name}
+                    {e.name}
                   </option>
                 ))}
               </select>
@@ -194,6 +149,24 @@ export default function AuditPageClient({
                     {u.username}
                   </option>
                 ))}
+              </select>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                Result
+              </label>
+              <select
+                value={filterResult}
+                onChange={(e) => {
+                  setFilterResult(e.target.value);
+                  setPage(1);
+                }}
+                className="w-full border-slate-300 rounded-md text-sm focus:ring-sfrs-red focus:border-sfrs-red p-2 min-h-[44px]"
+              >
+                <option value="">All Results</option>
+                <option value="PASS">PASS</option>
+                <option value="FAIL">FAIL</option>
               </select>
             </div>
           </div>
@@ -259,9 +232,6 @@ export default function AuditPageClient({
                       </td>
                       <td className="px-4 py-4 text-sm text-slate-900">
                         <div className="font-bold leading-none">
-                          {log.equipment.externalId}
-                        </div>
-                        <div className="text-xs text-slate-500 leading-none mt-1">
                           {log.equipment.name}
                         </div>
                       </td>

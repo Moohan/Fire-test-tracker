@@ -11,10 +11,9 @@ export interface EquipmentRequirement {
 
 export interface Equipment {
   id: string;
-  externalId: string;
+  externalId: string | null;
   name: string;
-  location: string;
-  category: string;
+  location: string | null;
   procedurePath: string | null;
   status: Status;
   sfrsId: string | null;

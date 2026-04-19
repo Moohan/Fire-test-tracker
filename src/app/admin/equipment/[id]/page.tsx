@@ -3,7 +3,7 @@ import { authOptions } from "@/lib/auth";
 import { redirect, notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
-import EquipmentForm from "../components/EquipmentForm";
+import { EquipmentForm } from "../components/EquipmentForm";
 import { Equipment, Frequency, TestType } from "@/types/equipment";
 import { Prisma } from "@prisma/client";
 
@@ -14,10 +14,8 @@ type EquipmentWithRequirements = Prisma.EquipmentGetPayload<{
 function toEquipmentInitialData(raw: EquipmentWithRequirements): Equipment {
   return {
     id: raw.id,
-    externalId: raw.externalId,
     name: raw.name,
     location: raw.location,
-    category: raw.category,
     procedurePath: raw.procedurePath,
     status: raw.status as "ON_RUN" | "OFF_RUN",
     sfrsId: raw.sfrsId,
@@ -26,6 +24,7 @@ function toEquipmentInitialData(raw: EquipmentWithRequirements): Equipment {
     removedAt: raw.removedAt ? raw.removedAt.toISOString() : null,
     statutoryExamination: Boolean(raw.statutoryExamination),
     trackHours: Boolean(raw.trackHours),
+    externalId: raw.externalId,
     requirements: raw.requirements.map((r) => ({
       id: r.id,
       equipmentId: r.equipmentId,
@@ -71,7 +70,7 @@ export default async function EditEquipmentPage({
           Edit Equipment
         </h1>
         <p className="text-slate-500 font-medium">
-          {equipment.name} ({equipment.externalId})
+          {equipment.name}
         </p>
       </header>
 
