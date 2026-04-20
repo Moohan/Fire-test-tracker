@@ -162,9 +162,6 @@ function DashboardContent() {
         <div className="p-4 flex-1">
           <div className="flex justify-between items-start mb-2">
             <div className="min-w-0 flex-1 mr-2">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                {item.externalId}
-              </span>
               <h2 className="text-lg font-bold text-slate-900 leading-tight truncate">
                 {item.name}
               </h2>

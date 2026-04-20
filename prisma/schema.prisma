@@ -20,8 +20,7 @@ model Equipment {
   id                   String            @id @default(cuid())
   externalId           String            @unique
   name                 String
-  location             String
-  category             String
+  location             String?
   procedurePath        String?
   status               String            @default("ON_RUN")
   sfrsId               String?           @unique

@@ -191,7 +191,7 @@ export default function LogTestPage() {
               Record Test
             </h1>
             <p className="text-sm text-slate-500 leading-none mt-1 truncate">
-              {item.name} ({item.externalId})
+              {item.name}
             </p>
           </div>
         </div>

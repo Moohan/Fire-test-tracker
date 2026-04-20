@@ -74,7 +74,6 @@ describe("POST /api/tests/log", () => {
       externalId: "EXT-1",
       name: "Eq 1",
       location: "Loc 1",
-      category: "Cat 1",
       procedurePath: null,
       status: "ON_RUN",
     };
@@ -116,7 +115,6 @@ describe("POST /api/tests/log", () => {
       externalId: "EXT-1",
       name: "Eq 1",
       location: "Loc 1",
-      category: "Cat 1",
       procedurePath: null,
       status: "OFF_RUN",
     };
@@ -158,7 +156,6 @@ describe("POST /api/tests/log", () => {
       externalId: "EXT-1",
       name: "Eq 1",
       location: "Loc 1",
-      category: "Cat 1",
       procedurePath: null,
       status: "OFF_RUN",
     };

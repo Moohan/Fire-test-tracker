@@ -12,7 +12,7 @@ export default async function AdminEquipmentPage() {
   }
 
   const equipment = await prisma.equipment.findMany({
-    orderBy: { externalId: "asc" },
+    orderBy: { name: "asc" },
   });
 
   return (
@@ -68,14 +68,11 @@ export default async function AdminEquipmentPage() {
               <li key={item.id} className="hover:bg-slate-50 transition-colors">
                 <div className="px-6 py-4 flex items-center justify-between">
                   <div className="flex flex-col min-w-0">
-                    <span className="text-xs font-bold text-sfrs-red uppercase tracking-wider">
-                      {item.externalId}
-                    </span>
                     <span className="text-lg font-bold text-slate-900 truncate">
                       {item.name}
                     </span>
                     <span className="text-xs text-slate-500">
-                      {item.location} • {item.category}
+                      {item.location}
                     </span>
                   </div>
                   <div className="flex items-center space-x-4 ml-4">

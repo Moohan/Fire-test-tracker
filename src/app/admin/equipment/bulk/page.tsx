@@ -40,10 +40,9 @@ export default async function BulkUploadPage() {
           Your CSV should include the following columns:
         </p>
         <ul className="list-disc list-inside text-sm text-slate-600 space-y-1 font-mono bg-white p-4 rounded border">
-          <li>Equipment_ID (Required, Unique)</li>
+          <li>Equipment_ID (Required, will be used as SFRS_ID)</li>
           <li>Name (Required)</li>
-          <li>Location (Required)</li>
-          <li>Category (Required)</li>
+          <li>Location (Optional)</li>
           <li>SFRS_ID (Optional)</li>
           <li>Manufacturer_ID (Optional)</li>
           <li>Weekly_Test_Type (Optional: VISUAL/FUNCTIONAL)</li>

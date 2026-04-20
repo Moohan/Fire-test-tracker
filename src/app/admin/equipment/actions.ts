@@ -5,15 +5,14 @@ import { ensureAdmin } from "@/lib/authorization";
 import { revalidatePath } from "next/cache";
 import { writeFile, mkdir, unlink } from "fs/promises";
 import path from "path";
-import { redirect } from "next/navigation";
 import { z } from "zod";
 import { Prisma } from "@prisma/client";
+import { randomUUID } from "crypto";
+import { ALLOWED_LOCATIONS } from "@/lib/constants";
 
 const EquipmentSchema = z.object({
-  externalId: z.string().min(1, "External ID is required"),
   name: z.string().min(1, "Name is required"),
-  location: z.string().min(1, "Location is required"),
-  category: z.string().min(1, "Category is required"),
+  location: z.enum(ALLOWED_LOCATIONS).nullable().optional(),
   status: z.enum(["ON_RUN", "OFF_RUN"]),
   sfrsId: z.string().optional().nullable(),
   mfrId: z.string().optional().nullable(),
@@ -28,12 +27,7 @@ const RequirementSchema = z.object({
   type: z.enum(["VISUAL", "FUNCTIONAL"]),
 });
 
-/**
- * Normalizes a procedure path to be relative to the public directory.
- * Prevents potential path traversal or absolute path issues.
- */
 function getNormalizedProcedurePath(procedurePath: string): string {
-  // Remove leading slashes to ensure it's relative when joined
   const normalized = procedurePath.startsWith("/")
     ? procedurePath.slice(1)
     : procedurePath;
@@ -44,11 +38,9 @@ export async function saveEquipment(formData: FormData, id?: string) {
   await ensureAdmin();
 
   const validatedFields = EquipmentSchema.safeParse({
-    externalId: formData.get("externalId"),
     name: formData.get("name"),
-    location: formData.get("location"),
-    category: formData.get("category"),
-    status: formData.get("status"),
+    location: (formData.get("location") as string) || null,
+    status: formData.get("status") || "ON_RUN",
     sfrsId: (formData.get("sfrsId") as string) || null,
     mfrId: (formData.get("mfrId") as string) || null,
     expiryDate: (formData.get("expiryDate") as string) || null,
@@ -62,10 +54,8 @@ export async function saveEquipment(formData: FormData, id?: string) {
   }
 
   const {
-    externalId,
     name,
     location,
-    category,
     status,
     sfrsId,
     mfrId,
@@ -89,7 +79,6 @@ export async function saveEquipment(formData: FormData, id?: string) {
     const filePath = path.join(uploadDir, filename);
     await writeFile(filePath, buffer);
 
-    // If there was an old file, delete it
     if (procedurePath) {
       try {
         const normalizedOldPath = getNormalizedProcedurePath(procedurePath);
@@ -102,7 +91,6 @@ export async function saveEquipment(formData: FormData, id?: string) {
     procedurePath = `/procedures/${filename}`;
   }
 
-  // Handle requirements
   const frequencies = ["WEEKLY", "MONTHLY", "QUARTERLY", "ANNUAL"] as const;
   const requirementsData = frequencies
     .map((f) => {
@@ -126,11 +114,9 @@ export async function saveEquipment(formData: FormData, id?: string) {
       } => r !== null,
     );
 
-  const data = {
-    externalId,
+  const commonData = {
     name,
     location,
-    category,
     status,
     procedurePath,
     sfrsId,
@@ -139,23 +125,31 @@ export async function saveEquipment(formData: FormData, id?: string) {
     statutoryExamination,
     removedAt: removedAt ? new Date(removedAt) : null,
     trackHours,
-    requirements: {
-      create: requirementsData,
-    },
   };
 
   try {
     if (id) {
-      await prisma.$transaction([
-        prisma.testRequirement.deleteMany({ where: { equipmentId: id } }),
-        prisma.equipment.update({
-          where: { id },
-          data,
-        }),
-      ]);
+      const updateData: Prisma.EquipmentUpdateInput = {
+        ...commonData,
+        requirements: {
+          deleteMany: {},
+          create: requirementsData,
+        },
+      };
+      await prisma.equipment.update({
+        where: { id },
+        data: updateData,
+      });
     } else {
+      const createData: Prisma.EquipmentCreateInput = {
+        ...commonData,
+        externalId: randomUUID(),
+        requirements: {
+          create: requirementsData,
+        },
+      };
       await prisma.equipment.create({
-        data,
+        data: createData,
       });
     }
   } catch (error: unknown) {
@@ -164,9 +158,6 @@ export async function saveEquipment(formData: FormData, id?: string) {
       error.code === "P2002"
     ) {
       const target = (error.meta?.target as string[]) || [];
-      if (target.includes("externalId")) {
-        throw new Error("Equipment ID already exists.");
-      }
       if (target.includes("sfrsId")) {
         throw new Error("SFRS ID already exists.");
       }
@@ -176,7 +167,7 @@ export async function saveEquipment(formData: FormData, id?: string) {
   }
 
   revalidatePath("/admin/equipment");
-  redirect("/admin/equipment");
+  return { success: true };
 }
 
 export async function deleteEquipment(id: string) {
@@ -203,5 +194,5 @@ export async function deleteEquipment(id: string) {
   });
 
   revalidatePath("/admin/equipment");
-  redirect("/admin/equipment");
+  return { success: true };
 }

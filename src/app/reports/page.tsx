@@ -22,7 +22,6 @@ interface LogEntry {
     fullName: string | null;
   };
   equipment: {
-    externalId: string;
     name: string;
     sfrsId: string | null;
     mfrId: string | null;
@@ -33,7 +32,6 @@ interface LogEntry {
 
 interface EquipmentItem {
   id: string;
-  externalId: string;
   name: string;
   location: string;
   sfrsId: string | null;
@@ -67,11 +65,9 @@ export default function ReportsPage() {
     if (!equipment) return [];
     return equipment.filter(
       (e) =>
-        e.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        e.externalId.toLowerCase().includes(searchTerm.toLowerCase()),
+        e.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [equipment, searchTerm]);
-
   const toggleEquipment = (id: string) => {
     setSelectedEquipment((prev) =>
       prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id],
@@ -104,7 +100,6 @@ export default function ReportsPage() {
       ];
       const rows = logs.map((l) => [
         format(new Date(l.timestamp), "dd/MM/yyyy HH:mm"),
-        l.equipment.externalId,
         l.equipment.name,
         l.testCode || l.type,
         l.result,
@@ -253,7 +248,7 @@ export default function ReportsPage() {
         });
 
         zip.file(
-          `${item.externalId}_${item.name.replace(/[^a-z0-9]/gi, "_")}.pdf`,
+          `${item.name.replace(/[^a-z0-9]/gi, "_")}.pdf`,
           doc.output("blob"),
         );
       }
@@ -355,7 +350,7 @@ export default function ReportsPage() {
                         {e.name}
                       </p>
                       <p className="text-[10px] text-slate-500 uppercase">
-                        {e.externalId} • {e.location}
+                        {e.location}
                       </p>
                     </div>
                   </label>

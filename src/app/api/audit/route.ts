@@ -28,7 +28,6 @@ export async function GET(req: Request) {
       where,
       include: {
         equipment: {
-          select: { externalId: true, name: true },
         },
         user: {
           select: { username: true },

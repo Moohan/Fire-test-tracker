@@ -1,75 +1,66 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useTransition } from "react";
 import { saveEquipment, deleteEquipment } from "../actions";
 import { Equipment } from "@/types/equipment";
+import { useRouter } from "next/navigation";
+import { ALLOWED_LOCATIONS } from "@/lib/constants";
 
 interface EquipmentFormProps {
-  initialData?: Equipment;
+  initialData?: Equipment & {
+    requirements?: { frequency: string; type: string }[];
+  };
 }
 
-export default function EquipmentForm({ initialData }: EquipmentFormProps) {
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [error, action, isPending] = useActionState<string | null, FormData>(
-    async (prevState: string | null, formData: FormData) => {
+export function EquipmentForm({ initialData }: EquipmentFormProps) {
+  const [isPending, startTransition] = useTransition();
+  const [isDeleting, startDeletingTransition] = useTransition();
+  const router = useRouter();
+
+  const frequencies = ["WEEKLY", "MONTHLY", "QUARTERLY", "ANNUAL"] as const;
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    startTransition(async () => {
       try {
-        await saveEquipment(formData, initialData?.id);
-        return null;
-      } catch (e: unknown) {
-        return e instanceof Error ? e.message : String(e);
+        const result = await saveEquipment(formData, initialData?.id);
+        if (result.success) {
+          router.push("/admin/equipment");
+          router.refresh();
+        }
+      } catch (error: unknown) {
+        alert(error instanceof Error ? error.message : "An error occurred");
       }
-    },
-    null,
-  );
+    });
+  };
 
   const handleDelete = async () => {
     if (!initialData?.id) return;
     if (
       !confirm(
-        "Are you sure you want to delete this equipment? This action cannot be undone.",
+        "Are you sure you want to delete this equipment? This will also delete all associated test logs.",
       )
-    ) {
+    )
       return;
-    }
 
-    setIsDeleting(true);
-    try {
-      await deleteEquipment(initialData.id);
-    } catch (e: unknown) {
-      alert(e instanceof Error ? e.message : "Failed to delete equipment");
-      setIsDeleting(false);
-    }
+    startDeletingTransition(async () => {
+      try {
+        const result = await deleteEquipment(initialData.id);
+        if (result.success) {
+          router.push("/admin/equipment");
+          router.refresh();
+        }
+      } catch (error: unknown) {
+        alert(error instanceof Error ? error.message : "An error occurred");
+      }
+    });
   };
 
-  const frequencies = ["WEEKLY", "MONTHLY", "QUARTERLY", "ANNUAL"];
-
   return (
-    <div className="space-y-6">
-      <form action={action} className="space-y-6">
-        {error && (
-          <div className="p-4 bg-sfrs-red/10 text-sfrs-red border border-sfrs-red/20 rounded-md">
-            {error}
-          </div>
-        )}
-
+    <div className="space-y-8">
+      <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label
-              htmlFor="externalId"
-              className="block text-sm font-medium text-slate-700 uppercase tracking-wider"
-            >
-              External ID (Unique)
-            </label>
-            <input
-              type="text"
-              name="externalId"
-              id="externalId"
-              required
-              defaultValue={initialData?.externalId}
-              className="mt-1 block w-full border border-slate-300 rounded-md shadow-sm p-3 min-h-[44px]"
-            />
-          </div>
-
           <div>
             <label
               htmlFor="name"
@@ -126,50 +117,40 @@ export default function EquipmentForm({ initialData }: EquipmentFormProps) {
             >
               Location
             </label>
-            <input
-              type="text"
+            <select
               name="location"
               id="location"
-              required
-              defaultValue={initialData?.location}
-              className="mt-1 block w-full border border-slate-300 rounded-md shadow-sm p-3 min-h-[44px]"
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="category"
-              className="block text-sm font-medium text-slate-700 uppercase tracking-wider"
-            >
-              Category
-            </label>
-            <input
-              type="text"
-              name="category"
-              id="category"
-              required
-              defaultValue={initialData?.category}
-              className="mt-1 block w-full border border-slate-300 rounded-md shadow-sm p-3 min-h-[44px]"
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="status"
-              className="block text-sm font-medium text-slate-700 uppercase tracking-wider"
-            >
-              Status
-            </label>
-            <select
-              name="status"
-              id="status"
-              defaultValue={initialData?.status || "ON_RUN"}
+              defaultValue={initialData?.location || ""}
               className="mt-1 block w-full border border-slate-300 rounded-md shadow-sm p-3 min-h-[44px] bg-white"
             >
-              <option value="ON_RUN">On the Run</option>
-              <option value="OFF_RUN">Off the Run</option>
+              <option value="">Select Location (Optional)</option>
+              {ALLOWED_LOCATIONS.map((loc) => (
+                <option key={loc} value={loc}>
+                  {loc}
+                </option>
+              ))}
             </select>
           </div>
+
+          {initialData && (
+            <div>
+              <label
+                htmlFor="status"
+                className="block text-sm font-medium text-slate-700 uppercase tracking-wider"
+              >
+                Status
+              </label>
+              <select
+                name="status"
+                id="status"
+                defaultValue={initialData?.status || "ON_RUN"}
+                className="mt-1 block w-full border border-slate-300 rounded-md shadow-sm p-3 min-h-[44px] bg-white"
+              >
+                <option value="ON_RUN">On the Run</option>
+                <option value="OFF_RUN">Off the Run</option>
+              </select>
+            </div>
+          )}
 
           <div className="flex items-center space-x-3 pt-6">
             <input

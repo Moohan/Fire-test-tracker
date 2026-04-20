@@ -11,29 +11,18 @@ export default async function AuditPage() {
     redirect("/");
   }
 
-  const [logs, equipment, users] = await Promise.all([
-    prisma.testLog.findMany({
-      include: {
-        equipment: true,
-        user: {
-          select: {
-            username: true,
-            fullName: true,
-          },
-        },
-      },
-      orderBy: { timestamp: "desc" },
-      take: 20,
-    }),
+  const [equipment, users] = await Promise.all([
     prisma.equipment.findMany({
-      select: { id: true, name: true, externalId: true },
+      select: { id: true, name: true },
+      orderBy: { name: "asc" },
     }),
     prisma.user.findMany({
-      select: { id: true, username: true, fullName: true },
+      select: { id: true, username: true },
+      orderBy: { username: "asc" },
     }),
   ]);
 
   return (
-    <AuditPageClient initialLogs={logs} equipment={equipment} users={users} />
+    <AuditPageClient initialMetadata={{ equipment, users }} />
   );
 }
