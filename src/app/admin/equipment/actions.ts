@@ -5,14 +5,14 @@ import { ensureAdmin } from "@/lib/authorization";
 import { revalidatePath } from "next/cache";
 import { writeFile, mkdir, unlink } from "fs/promises";
 import path from "path";
-import { redirect } from "next/navigation";
 import { z } from "zod";
 import { Prisma } from "@prisma/client";
 import { randomUUID } from "crypto";
+import { ALLOWED_LOCATIONS } from "@/lib/constants";
 
 const EquipmentSchema = z.object({
   name: z.string().min(1, "Name is required"),
-  location: z.enum(["Cab", "pump locker", "driver's side front", "driver's side rear", "offside front", "offside rear"]).nullable().optional(),
+  location: z.enum(ALLOWED_LOCATIONS).nullable().optional(),
   status: z.enum(["ON_RUN", "OFF_RUN"]),
   sfrsId: z.string().optional().nullable(),
   mfrId: z.string().optional().nullable(),
@@ -39,7 +39,7 @@ export async function saveEquipment(formData: FormData, id?: string) {
 
   const validatedFields = EquipmentSchema.safeParse({
     name: formData.get("name"),
-    location: formData.get("location") || null,
+    location: (formData.get("location") as string) || null,
     status: formData.get("status") || "ON_RUN",
     sfrsId: (formData.get("sfrsId") as string) || null,
     mfrId: (formData.get("mfrId") as string) || null,
@@ -114,7 +114,7 @@ export async function saveEquipment(formData: FormData, id?: string) {
       } => r !== null,
     );
 
-  const baseData = {
+  const commonData = {
     name,
     location,
     status,
@@ -125,26 +125,31 @@ export async function saveEquipment(formData: FormData, id?: string) {
     statutoryExamination,
     removedAt: removedAt ? new Date(removedAt) : null,
     trackHours,
-    requirements: {
-      create: requirementsData,
-    },
   };
 
   try {
     if (id) {
-      await prisma.$transaction([
-        prisma.testRequirement.deleteMany({ where: { equipmentId: id } }),
-        prisma.equipment.update({
-          where: { id },
-          data: baseData as Prisma.EquipmentUpdateInput,
-        }),
-      ]);
+      const updateData: Prisma.EquipmentUpdateInput = {
+        ...commonData,
+        requirements: {
+          deleteMany: {},
+          create: requirementsData,
+        },
+      };
+      await prisma.equipment.update({
+        where: { id },
+        data: updateData,
+      });
     } else {
+      const createData: Prisma.EquipmentCreateInput = {
+        ...commonData,
+        externalId: randomUUID(),
+        requirements: {
+          create: requirementsData,
+        },
+      };
       await prisma.equipment.create({
-        data: {
-          ...baseData,
-          externalId: randomUUID(),
-        } as Prisma.EquipmentCreateInput,
+        data: createData,
       });
     }
   } catch (error: unknown) {
@@ -162,7 +167,7 @@ export async function saveEquipment(formData: FormData, id?: string) {
   }
 
   revalidatePath("/admin/equipment");
-  redirect("/admin/equipment");
+  return { success: true };
 }
 
 export async function deleteEquipment(id: string) {
@@ -189,5 +194,5 @@ export async function deleteEquipment(id: string) {
   });
 
   revalidatePath("/admin/equipment");
-  redirect("/admin/equipment");
+  return { success: true };
 }

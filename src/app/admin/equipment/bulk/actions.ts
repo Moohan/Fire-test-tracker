@@ -80,30 +80,37 @@ export async function bulkUploadEquipment(formData: FormData) {
 
       const row = validatedFields.data;
 
-      const requirements = [];
+      const requirements: { frequency: "WEEKLY" | "MONTHLY" | "QUARTERLY" | "ANNUAL"; type: "VISUAL" | "FUNCTIONAL" }[] = [];
       if (row.Weekly_Test_Type !== "NONE") {
-        requirements.push({ frequency: "WEEKLY", type: row.Weekly_Test_Type });
+        requirements.push({ frequency: "WEEKLY", type: row.Weekly_Test_Type as "VISUAL" | "FUNCTIONAL" });
       }
       if (row.Monthly_Test_Type !== "NONE") {
         requirements.push({
           frequency: "MONTHLY",
-          type: row.Monthly_Test_Type,
+          type: row.Monthly_Test_Type as "VISUAL" | "FUNCTIONAL",
         });
       }
       if (row.Quarterly_Test_Type !== "NONE") {
         requirements.push({
           frequency: "QUARTERLY",
-          type: row.Quarterly_Test_Type,
+          type: row.Quarterly_Test_Type as "VISUAL" | "FUNCTIONAL",
         });
       }
       if (row.Annual_Test_Type !== "NONE") {
-        requirements.push({ frequency: "ANNUAL", type: row.Annual_Test_Type });
+        requirements.push({ frequency: "ANNUAL", type: row.Annual_Test_Type as "VISUAL" | "FUNCTIONAL" });
       }
 
       const equipment = await prisma.equipment.findUnique({
         where: { sfrsId: row.SFRS_ID || row.Equipment_ID },
         select: { id: true },
       });
+
+      const commonData = {
+        name: row.Name,
+        location: row.Location || null,
+        sfrsId: row.SFRS_ID || row.Equipment_ID,
+        mfrId: row.Manufacturer_ID || null,
+      };
 
       if (equipment) {
         await prisma.$transaction([
@@ -113,28 +120,22 @@ export async function bulkUploadEquipment(formData: FormData) {
           prisma.equipment.update({
             where: { id: equipment.id },
             data: {
-              name: row.Name,
-              location: row.Location || null,
-              sfrsId: row.SFRS_ID || row.Equipment_ID,
-              mfrId: row.Manufacturer_ID || null,
+              ...commonData,
               requirements: {
                 create: requirements,
               },
-            },
+            } as Prisma.EquipmentUpdateInput,
           }),
         ]);
       } else {
         await prisma.equipment.create({
           data: {
+            ...commonData,
             externalId: randomUUID(),
-            name: row.Name,
-            location: row.Location || null,
-            sfrsId: row.SFRS_ID || row.Equipment_ID,
-            mfrId: row.Manufacturer_ID || null,
             requirements: {
               create: requirements,
             },
-          },
+          } as Prisma.EquipmentCreateInput,
         });
       }
       results.success++;

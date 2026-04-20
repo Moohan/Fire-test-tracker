@@ -1,9 +1,10 @@
-
 "use client";
 
 import { useTransition } from "react";
 import { saveEquipment, deleteEquipment } from "../actions";
 import { Equipment } from "@/types/equipment";
+import { useRouter } from "next/navigation";
+import { ALLOWED_LOCATIONS } from "@/lib/constants";
 
 interface EquipmentFormProps {
   initialData?: Equipment & {
@@ -11,18 +12,10 @@ interface EquipmentFormProps {
   };
 }
 
-const locations = [
-  "Cab",
-  "pump locker",
-  "driver's side front",
-  "driver's side rear",
-  "offside front",
-  "offside rear",
-];
-
 export function EquipmentForm({ initialData }: EquipmentFormProps) {
   const [isPending, startTransition] = useTransition();
   const [isDeleting, startDeletingTransition] = useTransition();
+  const router = useRouter();
 
   const frequencies = ["WEEKLY", "MONTHLY", "QUARTERLY", "ANNUAL"] as const;
 
@@ -31,7 +24,11 @@ export function EquipmentForm({ initialData }: EquipmentFormProps) {
     const formData = new FormData(e.currentTarget);
     startTransition(async () => {
       try {
-        await saveEquipment(formData, initialData?.id);
+        const result = await saveEquipment(formData, initialData?.id);
+        if (result.success) {
+          router.push("/admin/equipment");
+          router.refresh();
+        }
       } catch (error: unknown) {
         alert(error instanceof Error ? error.message : "An error occurred");
       }
@@ -49,7 +46,11 @@ export function EquipmentForm({ initialData }: EquipmentFormProps) {
 
     startDeletingTransition(async () => {
       try {
-        await deleteEquipment(initialData.id);
+        const result = await deleteEquipment(initialData.id);
+        if (result.success) {
+          router.push("/admin/equipment");
+          router.refresh();
+        }
       } catch (error: unknown) {
         alert(error instanceof Error ? error.message : "An error occurred");
       }
@@ -123,7 +124,7 @@ export function EquipmentForm({ initialData }: EquipmentFormProps) {
               className="mt-1 block w-full border border-slate-300 rounded-md shadow-sm p-3 min-h-[44px] bg-white"
             >
               <option value="">Select Location (Optional)</option>
-              {locations.map((loc) => (
+              {ALLOWED_LOCATIONS.map((loc) => (
                 <option key={loc} value={loc}>
                   {loc}
                 </option>
