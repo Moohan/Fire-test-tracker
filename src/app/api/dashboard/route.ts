@@ -5,6 +5,7 @@ import { authOptions } from "@/lib/auth";
 import {
   getTestingWindow,
   getPreviousTestingWindow,
+  TestingWindow,
 } from "@/lib/testing-windows";
 import { Frequency } from "@/types/equipment";
 import {
@@ -23,6 +24,18 @@ export async function GET() {
 
   const now = new Date();
   const yearStart = startOfYear(now);
+
+  // ⚡ Optimization: Pre-calculate testing windows for standard frequencies outside the main loop
+  const frequencies: Frequency[] = ["WEEKLY", "MONTHLY", "QUARTERLY", "ANNUAL"];
+  const windowCache = Object.fromEntries(
+    frequencies.map((f) => [
+      f,
+      {
+        current: getTestingWindow(f, now),
+        previous: getPreviousTestingWindow(f, now),
+      },
+    ])
+  ) as Record<Frequency, { current: TestingWindow; previous: TestingWindow }>;
 
   const equipment = await prisma.equipment.findMany({
     where: {
@@ -54,42 +67,63 @@ export async function GET() {
       };
     }
 
+    // ⚡ Optimization: Pre-process logs once per equipment
+    const processedLogs = item.testLogs.map(log => ({
+      ...log,
+      timestamp: log.timestamp instanceof Date ? log.timestamp : new Date(log.timestamp)
+    }));
+
+    // ⚡ Optimization: Pre-calculate logs in windows for each frequency ONCE per equipment
+    const logsByFrequency = Object.fromEntries(
+      frequencies.map(f => {
+        const windows = windowCache[f];
+        return [f, {
+          current: processedLogs.filter(log => log.timestamp >= windows.current.start && log.timestamp <= windows.current.end),
+          previous: processedLogs.filter(log => log.timestamp >= windows.previous.start && log.timestamp <= windows.previous.end)
+        }];
+      })
+    );
+
+    // ⚡ Optimization: Pre-filter relevant logs for each test type once per equipment
+    const logsByType = {
+      VISUAL: processedLogs.filter(log =>
+        log.type === "VISUAL" || log.type === "FUNCTIONAL" || log.type === "ACCEPTANCE"
+      ),
+      FUNCTIONAL: processedLogs.filter(log =>
+        log.type === "FUNCTIONAL" || log.type === "ACCEPTANCE"
+      )
+    };
+
     const compliance = item.requirements.map((req) => {
       const freq = req.frequency as Frequency;
-      const currentWindow = getTestingWindow(freq, now);
-      const prevWindow = getPreviousTestingWindow(freq, now);
+      const type = req.type as keyof typeof logsByType;
 
-      const logsInCurrent = item.testLogs.filter((log) => {
-        const logDate = new Date(log.timestamp);
-        return logDate >= currentWindow.start && logDate <= currentWindow.end;
-      });
+      // ⚡ Address Review: Guard against unsupported frequencies
+      let windows = windowCache[freq];
+      let logsInCurrent, logsInPrev;
 
-      const logsInPrev = item.testLogs.filter((log) => {
-        const logDate = new Date(log.timestamp);
-        return logDate >= prevWindow.start && logDate <= prevWindow.end;
-      });
+      if (!windows) {
+        // Fallback for unexpected frequency types to avoid runtime crash
+        const current = getTestingWindow(freq, now);
+        const previous = getPreviousTestingWindow(freq, now);
+        windows = { current, previous };
+        logsInCurrent = processedLogs.filter(log => log.timestamp >= current.start && log.timestamp <= current.end);
+        logsInPrev = processedLogs.filter(log => log.timestamp >= previous.start && log.timestamp <= previous.end);
+      } else {
+        logsInCurrent = logsByFrequency[freq].current;
+        logsInPrev = logsByFrequency[freq].previous;
+      }
 
-      const hasFailInCurrent = logsInCurrent.some(
-        (log) => log.result === "FAIL",
-      );
+      const hasFailInCurrent = logsInCurrent.some(log => log.result === "FAIL");
 
-      const isSatisfied = (
-        logs: { result: string; type: string }[],
-        type: string,
-      ) => {
-        if (type === "VISUAL") {
-          return logs.some(
-            (log) =>
-              log.result === "PASS" &&
-              (log.type === "VISUAL" ||
-                log.type === "FUNCTIONAL" ||
-                log.type === "ACCEPTANCE"),
+      const isSatisfied = (logs: typeof processedLogs, testType: string) => {
+        if (testType === "VISUAL") {
+          return logs.some(log =>
+            log.result === "PASS" && (log.type === "VISUAL" || log.type === "FUNCTIONAL" || log.type === "ACCEPTANCE")
           );
-        } else if (type === "FUNCTIONAL") {
-          return logs.some(
-            (log) =>
-              log.result === "PASS" &&
-              (log.type === "FUNCTIONAL" || log.type === "ACCEPTANCE"),
+        } else if (testType === "FUNCTIONAL") {
+          return logs.some(log =>
+            log.result === "PASS" && (log.type === "FUNCTIONAL" || log.type === "ACCEPTANCE")
           );
         }
         return false;
@@ -110,25 +144,13 @@ export async function GET() {
         status = "OUTSTANDING";
       }
 
-      // Find the most recent relevant test log (regardless of window)
-      const relevantLogs = item.testLogs.filter((log) => {
-        if (req.type === "VISUAL") {
-          return (
-            log.type === "VISUAL" ||
-            log.type === "FUNCTIONAL" ||
-            log.type === "ACCEPTANCE"
-          );
-        } else if (req.type === "FUNCTIONAL") {
-          return log.type === "FUNCTIONAL" || log.type === "ACCEPTANCE";
-        }
-        return false;
-      });
-
+      // Find the most recent relevant test log (regardless of window) using pre-filtered lists
+      const relevantLogs = logsByType[type] || [];
       const lastTest = relevantLogs[0] || null;
       let overdueLabel = null;
 
       if (status === "OVERDUE" && lastTest) {
-        const lastDate = new Date(lastTest.timestamp);
+        const lastDate = lastTest.timestamp;
         let diff = 0;
         let unit = "";
 
@@ -149,6 +171,9 @@ export async function GET() {
             diff = differenceInYears(now, lastDate);
             unit = diff === 1 ? "year" : "years";
             break;
+          default:
+            // Optional: handle other frequencies if they exist but don't have diff logic here
+            break;
         }
 
         if (diff > 0) {
@@ -166,7 +191,7 @@ export async function GET() {
         status,
         satisfied: currentSatisfied,
         hasFail: hasFailInCurrent,
-        windowId: currentWindow.id,
+        windowId: windows.current.id,
         lastTest:
           status === "PASSED" || status === "FAILED"
             ? {
