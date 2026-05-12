@@ -55,6 +55,46 @@ const formatUserName = (user: TestLogUser | undefined) => {
   return `${rolePrefix} ${lastName}`.trim();
 };
 
+
+function DashboardSkeleton() {
+  return (
+    <div className="flex flex-col min-h-screen bg-slate-50 animate-pulse">
+      <header className="bg-white shadow-sm px-6 py-4 flex justify-between items-center sticky top-0 z-10 border-b border-slate-200">
+        <div className="space-y-2">
+          <div className="h-6 w-48 bg-slate-200 rounded"></div>
+          <div className="h-4 w-32 bg-slate-100 rounded"></div>
+        </div>
+        <div className="h-10 w-24 bg-slate-200 rounded-md"></div>
+      </header>
+
+      <main className="flex-1 p-4 sm:p-6 space-y-8">
+        <section>
+          <div className="h-4 w-40 bg-slate-200 rounded mb-4"></div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden h-64 flex flex-col p-4 space-y-4">
+                <div className="flex justify-between">
+                  <div className="h-6 w-32 bg-slate-200 rounded"></div>
+                  <div className="h-5 w-12 bg-slate-100 rounded-full"></div>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-3 w-24 bg-slate-100 rounded"></div>
+                  <div className="h-3 w-40 bg-slate-200 rounded"></div>
+                </div>
+                <div className="pt-3 border-t border-slate-100 space-y-3">
+                  <div className="h-3 w-32 bg-slate-100 rounded"></div>
+                  <div className="h-8 w-full bg-slate-50 rounded"></div>
+                  <div className="h-8 w-full bg-slate-50 rounded"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      </main>
+    </div>
+  );
+}
+
 function DashboardContent() {
   const { data: session } = useSession();
   const searchParams = useSearchParams();
@@ -91,12 +131,7 @@ function DashboardContent() {
     refetchInterval: 30000,
   });
 
-  if (isLoading)
-    return (
-      <div className="p-6 text-center text-slate-500 font-medium">
-        Loading Dashboard...
-      </div>
-    );
+  if (isLoading) return <DashboardSkeleton />;
 
   if (error)
     return (
@@ -305,7 +340,7 @@ function DashboardContent() {
         {showQueuedMessage && (
           <div className="bg-sfrs-green text-white p-4 rounded-md shadow-lg flex items-center justify-between">
             <span className="font-bold">Test result queued successfully!</span>
-            <button onClick={() => setShowQueuedMessage(false)} className="p-1">
+            <button onClick={() => setShowQueuedMessage(false)} className="p-1" aria-label="Dismiss notification">
               ✕
             </button>
           </div>
@@ -368,11 +403,7 @@ function DashboardContent() {
 export default function Dashboard() {
   return (
     <Suspense
-      fallback={
-        <div className="p-6 text-center text-slate-500">
-          Loading Dashboard...
-        </div>
-      }
+      fallback={<DashboardSkeleton />}
     >
       <DashboardContent />
     </Suspense>
