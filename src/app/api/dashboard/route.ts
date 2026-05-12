@@ -25,7 +25,7 @@ export async function GET() {
   const now = new Date();
   const yearStart = startOfYear(now);
 
-  // ⚡ Optimization: Pre-calculate testing windows for all frequencies outside the main loop
+  // ⚡ Optimization: Pre-calculate testing windows for standard frequencies outside the main loop
   const frequencies: Frequency[] = ["WEEKLY", "MONTHLY", "QUARTERLY", "ANNUAL"];
   const windowCache = Object.fromEntries(
     frequencies.map((f) => [
@@ -98,8 +98,21 @@ export async function GET() {
       const freq = req.frequency as Frequency;
       const type = req.type as keyof typeof logsByType;
 
-      const logsInCurrent = logsByFrequency[freq].current;
-      const logsInPrev = logsByFrequency[freq].previous;
+      // ⚡ Address Review: Guard against unsupported frequencies
+      let windows = windowCache[freq];
+      let logsInCurrent, logsInPrev;
+
+      if (!windows) {
+        // Fallback for unexpected frequency types to avoid runtime crash
+        const current = getTestingWindow(freq, now);
+        const previous = getPreviousTestingWindow(freq, now);
+        windows = { current, previous };
+        logsInCurrent = processedLogs.filter(log => log.timestamp >= current.start && log.timestamp <= current.end);
+        logsInPrev = processedLogs.filter(log => log.timestamp >= previous.start && log.timestamp <= previous.end);
+      } else {
+        logsInCurrent = logsByFrequency[freq].current;
+        logsInPrev = logsByFrequency[freq].previous;
+      }
 
       const hasFailInCurrent = logsInCurrent.some(log => log.result === "FAIL");
 
@@ -158,6 +171,9 @@ export async function GET() {
             diff = differenceInYears(now, lastDate);
             unit = diff === 1 ? "year" : "years";
             break;
+          default:
+            // Optional: handle other frequencies if they exist but don't have diff logic here
+            break;
         }
 
         if (diff > 0) {
@@ -175,7 +191,7 @@ export async function GET() {
         status,
         satisfied: currentSatisfied,
         hasFail: hasFailInCurrent,
-        windowId: windowCache[freq].current.id,
+        windowId: windows.current.id,
         lastTest:
           status === "PASSED" || status === "FAILED"
             ? {
